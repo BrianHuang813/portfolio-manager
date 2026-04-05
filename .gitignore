@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output — never commit
+dist/
+
+# Environment variables — never commit real keys
+.env.local
+.env
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/

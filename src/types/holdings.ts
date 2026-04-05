@@ -1,0 +1,39 @@
+// Spec: F3 — Canonical HoldingRecord shape shared across all platforms
+
+export type Platform = 'schwab' | 'okx' | 'zerion' | 'futu'
+export type AssetType = 'stock' | 'crypto'
+
+export interface HoldingRecord {
+  symbol: string              // e.g. "AAPL", "BTC", "700.HK"
+  name: string                // full display name
+  qty: number
+  costBasis: number           // per unit, USD
+  marketValue: number         // total current value, USD
+  unrealizedPL: number        // USD
+  unrealizedPLPercent: number // e.g. 12.34 (percent, not decimal)
+  platform: Platform
+  type: AssetType
+  lastUpdated: string         // ISO 8601
+  sourceWallet?: string       // Zerion only: shortened "0x123...abc"
+}
+
+export interface DailySnapshot {
+  date: string       // "YYYY-MM-DD"
+  totalValue: number
+  timestamp: string  // ISO 8601 full
+}
+
+export interface NewsArticle {
+  headline: string
+  source: string
+  datetime: number  // unix timestamp (seconds)
+  url: string
+}
+
+export type PlatformStatus = 'idle' | 'loading' | 'success' | 'error'
+
+export interface PlatformState {
+  status: PlatformStatus
+  lastUpdated: string | null
+  errorMessage: string | null
+}

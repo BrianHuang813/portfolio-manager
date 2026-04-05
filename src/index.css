@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Kinetic Ledger CSS Variables ───────────────────────────────────── */
+:root {
+  --surface:    #131313;
+  --cl:         #1b1b1b;
+  --cll:        #0e0e0e;
+  --ch:         #2a2a2a;
+  --chh:        #353535;
+  --primary:    #FFFFFF;
+  --on-s:       #e2e2e2;
+  --muted:      #919191;
+  --blade:      rgba(255,255,255,0.20);
+  --gain:       #4bdfa4;
+  --loss:       #ea6767;
+}
+
+/* ── Base ─────────────────────────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    border-radius: 0 !important;
+  }
+
+  html, body, #root {
+    background: var(--surface);
+    color: var(--primary);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+  }
+
+  /* Structural Blade — left-side accent line */
+  .blade-left {
+    border-left: 1px solid var(--blade);
+  }
+  .blade-top {
+    border-top: 1px solid var(--blade);
+  }
+  .blade-left-gain {
+    border-left: 2px solid var(--gain);
+  }
+  .blade-left-loss {
+    border-left: 2px solid var(--loss);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 3px; height: 3px; }
+  ::-webkit-scrollbar-track { background: var(--cll); }
+  ::-webkit-scrollbar-thumb { background: var(--ch); }
+  ::-webkit-scrollbar-thumb:hover { background: var(--chh); }
+
+  /* Recharts overrides — strip default styling */
+  .recharts-text { font-family: 'Inter', sans-serif !important; }
+  .recharts-cartesian-grid-horizontal line,
+  .recharts-cartesian-grid-vertical line {
+    stroke: #1f1f1f !important;
+  }
+}
+
+/* ── Shimmer skeleton ─────────────────────────────────────────────── */
+@layer components {
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--cl) 25%,
+      var(--ch) 50%,
+      var(--cl) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+}
+
+/* ── Kinetic number entrance ──────────────────────────────────────── */
+@layer utilities {
+  .animate-data-up {
+    animation: data-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .no-border { border: none !important; outline: none !important; }
+}
