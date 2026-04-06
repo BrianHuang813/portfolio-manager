@@ -1,4 +1,4 @@
-// Spec: F2.2 — OKX REST API v5, unified account, spot only
+// Spec: F2.2 — OKX REST API v5, unified account + funding account, spot only
 // HMAC-SHA256 signed via crypto.subtle (no external library)
 
 import { getConfig } from '../utils/storage'
@@ -11,6 +11,13 @@ interface OKXConfig {
   apiKey: string
   secret: string
   passphrase?: string  // optional — leave blank if your API key has no passphrase
+}
+
+interface OKXAssetBalance {
+  ccy: string
+  bal: string      // total balance
+  availBal: string // available balance
+  frozenBal: string
 }
 
 const OKX_BASE = 'https://www.okx.com'
@@ -34,18 +41,41 @@ async function buildOKXHeaders(
   }
 }
 
-async function fetchOKXBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
+// Trading/Unified Account — /api/v5/account/balance
+async function fetchTradingBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
   const path = '/api/v5/account/balance'
   const headers = await buildOKXHeaders(cfg, 'GET', path)
   const res = await fetch(`${OKX_BASE}${path}`, { headers })
   if (res.status === 401) throw new Error('OKX auth failed — check API key / secret / passphrase')
-  if (!res.ok) throw new Error(`OKX balance failed: ${res.status}`)
+  if (!res.ok) throw new Error(`OKX trading balance failed: ${res.status}`)
 
   const data = await res.json() as { code: string; msg: string; data: Array<{ details: OKXDetail[] }> }
-  console.log('[OKX] response code:', data.code, 'msg:', data.msg)
-  console.log('[OKX] details count:', data.data?.[0]?.details?.length ?? 0)
-  if (data.code !== '0') throw new Error(`OKX API error ${data.code}: ${data.msg}`)
+  console.log('[OKX trading] code:', data.code, 'msg:', data.msg, 'count:', data.data?.[0]?.details?.length ?? 0)
+  if (data.code !== '0') throw new Error(`OKX trading API error ${data.code}: ${data.msg}`)
   return data.data?.[0]?.details ?? []
+}
+
+// Funding Account — /api/v5/asset/balances (separate from trading account)
+async function fetchFundingBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
+  const path = '/api/v5/asset/balances'
+  const headers = await buildOKXHeaders(cfg, 'GET', path)
+  const res = await fetch(`${OKX_BASE}${path}`, { headers })
+  if (!res.ok) {
+    console.log('[OKX funding] fetch failed:', res.status)
+    return []
+  }
+
+  const data = await res.json() as { code: string; msg: string; data: OKXAssetBalance[] }
+  console.log('[OKX funding] code:', data.code, 'msg:', data.msg, 'count:', data.data?.length ?? 0)
+  if (data.code !== '0') {
+    console.log('[OKX funding] API error, skipping:', data.code, data.msg)
+    return []
+  }
+
+  // Convert OKXAssetBalance → OKXDetail shape (no avgPx, no eqUsd from this endpoint)
+  return (data.data ?? [])
+    .filter((b) => parseFloat(b.bal) > 0)
+    .map((b) => ({ ccy: b.ccy, eq: b.bal, eqUsd: '0' }))
 }
 
 export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
@@ -59,12 +89,31 @@ export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   }
   if (!cfg.apiKey || !cfg.secret) return []
 
-  const details = await fetchOKXBalance(cfg)
+  // Fetch both accounts in parallel; funding account errors are non-fatal
+  const [tradingDetails, fundingDetails] = await Promise.all([
+    fetchTradingBalance(cfg),
+    fetchFundingBalance(cfg).catch((e) => {
+      console.log('[OKX funding] error (non-fatal):', e)
+      return [] as OKXDetail[]
+    }),
+  ])
 
-  // Filter: has any quantity AND has USD value
-  const nonZero = details.filter(
+  // Merge: trading account has eqUsd; funding account entries without eqUsd get filtered out
+  // unless they show up in trading too. Deduplicate by ccy, prefer trading account entry.
+  const tradingMap = new Map(tradingDetails.map((d) => [d.ccy, d]))
+  const merged = [...tradingDetails]
+  for (const fd of fundingDetails) {
+    if (!tradingMap.has(fd.ccy)) merged.push(fd)
+  }
+
+  console.log('[OKX] total merged count:', merged.length)
+  merged.forEach((d) => console.log(`[OKX]   ${d.ccy}: eq=${d.eq} eqUsd=${d.eqUsd ?? '0'}`))
+
+  // Filter: has any quantity AND has USD value (funding-only entries without eqUsd are excluded)
+  const nonZero = merged.filter(
     (d) => parseFloat(d.eq) > 0 && parseFloat(d.eqUsd ?? '0') > 0.01,
   )
 
+  console.log('[OKX] non-zero (with USD value) count:', nonZero.length)
   return nonZero.map(normalizeOKX)
 }
