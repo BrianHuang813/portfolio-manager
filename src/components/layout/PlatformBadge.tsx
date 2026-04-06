@@ -8,6 +8,7 @@ const LABELS: Record<Platform, string> = {
   okx: 'OKX',
   zerion: 'ZRN',
   futu: 'FUTU',
+  bitcoin: 'BTC',
 }
 
 function ago(iso: string): string {
