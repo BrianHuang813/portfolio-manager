@@ -44,15 +44,15 @@ export function normalizeSchwab(pos: SchwabPosition): HoldingRecord {
 
 export interface OKXDetail {
   ccy: string
-  eq: string          // total equity in USD
-  avgPx?: string      // average cost price
-  usdPx?: string      // current price
+  eq: string      // quantity in currency terms (e.g. 0.001 BTC)
+  eqUsd: string   // total USD value (e.g. 45.23)
+  avgPx?: string  // average open price in USD per unit
 }
 
-export function normalizeOKX(detail: OKXDetail, currentPriceUSD: number): HoldingRecord {
-  const marketValue = parseFloat(detail.eq) || 0
+export function normalizeOKX(detail: OKXDetail): HoldingRecord {
+  const qty = parseFloat(detail.eq) || 0
+  const marketValue = parseFloat(detail.eqUsd ?? '0') || 0
   const costBasis = parseFloat(detail.avgPx ?? '0') || 0
-  const qty = currentPriceUSD > 0 ? marketValue / currentPriceUSD : 0
   const cost = qty * costBasis
   const unrealizedPL = cost > 0 ? marketValue - cost : 0
   const unrealizedPLPercent = cost > 0 ? (unrealizedPL / cost) * 100 : 0

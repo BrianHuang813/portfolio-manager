@@ -36,19 +36,20 @@ describe('normalizeSchwab', () => {
 
 describe('normalizeOKX', () => {
   it('computes marketValue and PnL correctly', () => {
-    const detail: OKXDetail = { ccy: 'BTC', eq: '50000', avgPx: '40000' }
-    const result = normalizeOKX(detail, 50000)
+    const detail: OKXDetail = { ccy: 'BTC', eq: '1', eqUsd: '50000', avgPx: '40000' }
+    const result = normalizeOKX(detail)
     expect(result.symbol).toBe('BTC')
     expect(result.platform).toBe('okx')
     expect(result.type).toBe('crypto')
+    expect(result.qty).toBe(1)
     expect(result.marketValue).toBe(50000)
-    expect(result.qty).toBeCloseTo(1, 4)
     expect(result.unrealizedPL).toBe(10000)         // 50000 - (1 * 40000)
+    expect(result.unrealizedPLPercent).toBe(25)     // 10000 / 40000 * 100
   })
 
   it('returns zero PnL when avgPx is missing', () => {
-    const detail: OKXDetail = { ccy: 'ETH', eq: '3000' }
-    const result = normalizeOKX(detail, 3000)
+    const detail: OKXDetail = { ccy: 'ETH', eq: '1', eqUsd: '3000' }
+    const result = normalizeOKX(detail)
     expect(result.unrealizedPL).toBe(0)
     expect(result.unrealizedPLPercent).toBe(0)
   })

@@ -45,20 +45,6 @@ async function fetchOKXBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
   return data.data?.[0]?.details ?? []
 }
 
-async function fetchOKXPrice(ccy: string): Promise<number> {
-  if (ccy === 'USDT' || ccy === 'USDC' || ccy === 'USD') return 1
-
-  const path = `/api/v5/market/ticker?instId=${ccy}-USDT`
-  try {
-    const res = await fetch(`${OKX_BASE}${path}`)
-    if (!res.ok) return 0
-    const data = await res.json() as { data: Array<{ last: string }> }
-    return parseFloat(data.data?.[0]?.last ?? '0') || 0
-  } catch {
-    return 0
-  }
-}
-
 export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   const raw = getConfig<OKXConfig>(STORAGE_KEYS.okx)
   if (!raw?.apiKey || !raw?.secret) return []
@@ -70,14 +56,11 @@ export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   if (!cfg.apiKey || !cfg.secret) return []
 
   const details = await fetchOKXBalance(cfg)
-  const nonZero = details.filter((d) => parseFloat(d.eq) > 0)
 
-  const holdings = await Promise.all(
-    nonZero.map(async (d) => {
-      const price = await fetchOKXPrice(d.ccy)
-      return normalizeOKX(d, price)
-    }),
+  // Filter: has any quantity AND has USD value
+  const nonZero = details.filter(
+    (d) => parseFloat(d.eq) > 0 && parseFloat(d.eqUsd ?? '0') > 0.01,
   )
 
-  return holdings.filter((h) => h.marketValue > 0.01)
+  return nonZero.map(normalizeOKX)
 }
