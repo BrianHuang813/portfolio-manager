@@ -42,14 +42,15 @@ async function fetchOKXBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
   if (!res.ok) throw new Error(`OKX balance failed: ${res.status}`)
 
   const data = await res.json() as { code: string; msg: string; data: Array<{ details: OKXDetail[] }> }
-  console.debug('[OKX] response code:', data.code, 'msg:', data.msg)
-  console.debug('[OKX] details count:', data.data?.[0]?.details?.length ?? 0)
+  console.log('[OKX] response code:', data.code, 'msg:', data.msg)
+  console.log('[OKX] details count:', data.data?.[0]?.details?.length ?? 0)
   if (data.code !== '0') throw new Error(`OKX API error ${data.code}: ${data.msg}`)
   return data.data?.[0]?.details ?? []
 }
 
 export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   const raw = getConfig<OKXConfig>(STORAGE_KEYS.okx)
+  console.log('[OKX] config loaded:', raw ? `apiKey=${raw.apiKey?.slice(0,6)}… secret=${raw.secret ? 'set' : 'missing'}` : 'null')
   if (!raw?.apiKey || !raw?.secret) return []
   const cfg: OKXConfig = {
     apiKey:     raw.apiKey.trim(),
