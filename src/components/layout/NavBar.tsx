@@ -20,7 +20,7 @@ export function NavBar({ onRefresh, isFetching }: NavBarProps) {
         {/* Wordmark */}
         <div className="flex items-center gap-8">
           <span className="font-display font-800 text-[0.9rem] tracking-[0.12em] uppercase text-primary">
-            Kinetic<span className="text-gain">_</span>Ledger
+            Brian<span className="text-gain">_</span>Ledger
           </span>
 
           <nav className="flex items-center gap-1">
