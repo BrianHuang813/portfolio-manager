@@ -23,8 +23,9 @@ export async function hmacSHA256(secret: string, message: string): Promise<strin
 }
 
 /**
- * Returns OKX-format timestamp: "2026-04-05T14:22:00Z" (no milliseconds)
+ * Returns OKX-format timestamp with milliseconds: "2026-04-05T14:22:00.123Z"
+ * OKX requires the full ISO 8601 string including milliseconds.
  */
 export function okxTimestamp(): string {
-  return new Date().toISOString().replace(/\.\d{3}Z$/, 'Z')
+  return new Date().toISOString()
 }
