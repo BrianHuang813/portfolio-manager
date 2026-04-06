@@ -60,8 +60,14 @@ async function fetchOKXPrice(ccy: string): Promise<number> {
 }
 
 export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
-  const cfg = getConfig<OKXConfig>(STORAGE_KEYS.okx)
-  if (!cfg?.apiKey || !cfg?.secret) return []
+  const raw = getConfig<OKXConfig>(STORAGE_KEYS.okx)
+  if (!raw?.apiKey || !raw?.secret) return []
+  const cfg: OKXConfig = {
+    apiKey:     raw.apiKey.trim(),
+    secret:     raw.secret.trim(),
+    passphrase: raw.passphrase?.trim() ?? '',
+  }
+  if (!cfg.apiKey || !cfg.secret) return []
 
   const details = await fetchOKXBalance(cfg)
   const nonZero = details.filter((d) => parseFloat(d.eq) > 0)
