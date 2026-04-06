@@ -20,7 +20,7 @@ async function fetchWalletPositions(
   apiKey: string,
 ): Promise<ZerionPosition[]> {
   const auth = btoa(`${apiKey}:`)
-  const url = `https://api.zerion.io/v1/wallets/${address}/positions/?filter[positions]=only_simple&currency=usd&filter[trash]=only_non_trash&sort=value`
+  const url = `https://api.zerion.io/v1/wallets/${address}/positions/?filter[positions]=only_simple&currency=usd&filter[trash]=only_non_trash&sort=-value`
 
   const res = await fetch(url, {
     headers: {
