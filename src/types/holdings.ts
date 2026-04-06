@@ -1,6 +1,6 @@
 // Spec: F3 — Canonical HoldingRecord shape shared across all platforms
 
-export type Platform = 'schwab' | 'okx' | 'zerion' | 'futu'
+export type Platform = 'schwab' | 'okx' | 'zerion' | 'futu' | 'bitcoin'
 export type AssetType = 'stock' | 'crypto'
 
 export interface HoldingRecord {

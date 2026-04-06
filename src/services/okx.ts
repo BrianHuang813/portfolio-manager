@@ -20,6 +20,12 @@ interface OKXAssetBalance {
   frozenBal: string
 }
 
+interface OKXSavingsBalance {
+  ccy: string
+  amt: string     // principal amount in savings
+  earnings: string
+}
+
 const OKX_BASE = 'https://www.okx.com'
 
 async function buildOKXHeaders(
@@ -78,6 +84,29 @@ async function fetchFundingBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
     .map((b) => ({ ccy: b.ccy, eq: b.bal, eqUsd: '0' }))
 }
 
+// Simple Earn (賺幣) — /api/v5/finance/savings/balance
+// Requires "Savings" read permission on the API key. Non-fatal if missing.
+async function fetchSavingsBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
+  const path = '/api/v5/finance/savings/balance'
+  const headers = await buildOKXHeaders(cfg, 'GET', path)
+  const res = await fetch(`${OKX_BASE}${path}`, { headers })
+  if (!res.ok) {
+    console.log('[OKX savings] fetch failed:', res.status, '(API key may lack Savings permission)')
+    return []
+  }
+
+  const data = await res.json() as { code: string; msg: string; data: OKXSavingsBalance[] }
+  console.log('[OKX savings] code:', data.code, 'msg:', data.msg, 'count:', data.data?.length ?? 0)
+  if (data.code !== '0') {
+    console.log('[OKX savings] skipping:', data.code, data.msg)
+    return []
+  }
+
+  return (data.data ?? [])
+    .filter((s) => parseFloat(s.amt) > 0)
+    .map((s) => ({ ccy: s.ccy, eq: s.amt, eqUsd: '0' }))
+}
+
 export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   const raw = getConfig<OKXConfig>(STORAGE_KEYS.okx)
   console.log('[OKX] config loaded:', raw ? `apiKey=${raw.apiKey?.slice(0,6)}… secret=${raw.secret ? 'set' : 'missing'}` : 'null')
@@ -89,21 +118,31 @@ export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   }
   if (!cfg.apiKey || !cfg.secret) return []
 
-  // Fetch both accounts in parallel; funding account errors are non-fatal
-  const [tradingDetails, fundingDetails] = await Promise.all([
+  // Fetch trading, funding, and savings in parallel; funding/savings errors are non-fatal
+  const [tradingDetails, fundingDetails, savingsDetails] = await Promise.all([
     fetchTradingBalance(cfg),
     fetchFundingBalance(cfg).catch((e) => {
       console.log('[OKX funding] error (non-fatal):', e)
       return [] as OKXDetail[]
     }),
+    fetchSavingsBalance(cfg).catch((e) => {
+      console.log('[OKX savings] error (non-fatal):', e)
+      return [] as OKXDetail[]
+    }),
   ])
 
-  // Merge: trading account has eqUsd; funding account entries without eqUsd get filtered out
-  // unless they show up in trading too. Deduplicate by ccy, prefer trading account entry.
+  // Merge all three: deduplicate by ccy, prefer trading (has eqUsd) over funding/savings
   const tradingMap = new Map(tradingDetails.map((d) => [d.ccy, d]))
   const merged = [...tradingDetails]
-  for (const fd of fundingDetails) {
-    if (!tradingMap.has(fd.ccy)) merged.push(fd)
+  for (const fd of [...fundingDetails, ...savingsDetails]) {
+    if (!tradingMap.has(fd.ccy)) {
+      merged.push(fd)
+      tradingMap.set(fd.ccy, fd) // prevent savings+funding duplicate
+    } else {
+      // Add savings/funding qty on top of trading qty for same ccy
+      const existing = tradingMap.get(fd.ccy)!
+      existing.eq = (parseFloat(existing.eq) + parseFloat(fd.eq)).toString()
+    }
   }
 
   console.log('[OKX] total merged count:', merged.length)

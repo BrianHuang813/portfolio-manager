@@ -7,6 +7,7 @@ import { fetchSchwabHoldings } from '../services/schwab'
 import { fetchOKXHoldings } from '../services/okx'
 import { fetchZerionHoldings } from '../services/zerion'
 import { fetchFutuHoldings } from '../services/futu'
+import { fetchBitcoinHoldings } from '../services/bitcoin'
 import { saveSnapshot } from '../utils/snapshot'
 import { useAppStore } from '../store/useAppStore'
 import { REFRESH_INTERVAL_MS } from '../config/constants'
@@ -19,11 +20,12 @@ interface FetchResult {
 }
 
 async function fetchAllHoldings(): Promise<FetchResult> {
-  const [schwabResult, okxResult, zerionResult, futuResult] = await Promise.allSettled([
+  const [schwabResult, okxResult, zerionResult, futuResult, bitcoinResult] = await Promise.allSettled([
     fetchSchwabHoldings(),
     fetchOKXHoldings(),
     fetchZerionHoldings(),
     fetchFutuHoldings(),
+    fetchBitcoinHoldings(),
   ])
 
   const holdings: HoldingRecord[] = []
@@ -63,6 +65,14 @@ async function fetchAllHoldings(): Promise<FetchResult> {
       : String(futuResult.reason)
   }
 
+  if (bitcoinResult.status === 'fulfilled') {
+    holdings.push(...bitcoinResult.value)
+  } else {
+    platformErrors.bitcoin = bitcoinResult.reason instanceof Error
+      ? bitcoinResult.reason.message
+      : String(bitcoinResult.reason)
+  }
+
   return { holdings, platformErrors, futuWarning }
 }
 
@@ -81,7 +91,7 @@ export function useAllHoldings() {
 
   useEffect(() => {
     if (query.isFetching) {
-      const platforms: Platform[] = ['schwab', 'okx', 'zerion', 'futu']
+      const platforms: Platform[] = ['schwab', 'okx', 'zerion', 'futu', 'bitcoin']
       platforms.forEach((p) => setPlatformStatus(p, { status: 'loading', errorMessage: null }))
     }
   }, [query.isFetching, setPlatformStatus])
@@ -90,7 +100,7 @@ export function useAllHoldings() {
     if (!query.data) return
     const now = new Date().toISOString()
     const { platformErrors, futuWarning } = query.data
-    const platforms: Platform[] = ['schwab', 'okx', 'zerion', 'futu']
+    const platforms: Platform[] = ['schwab', 'okx', 'zerion', 'futu', 'bitcoin']
 
     platforms.forEach((p) => {
       if (platformErrors[p]) {

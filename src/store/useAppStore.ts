@@ -68,6 +68,7 @@ export const useAppStore = create<AppState>((set) => ({
     okx: { ...defaultPlatformState },
     zerion: { ...defaultPlatformState },
     futu: { ...defaultPlatformState },
+    bitcoin: { ...defaultPlatformState },
   },
   setPlatformStatus: (platform, state) =>
     set((s) => ({
