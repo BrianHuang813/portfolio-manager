@@ -41,12 +41,27 @@ export async function fetchZerionHoldings(): Promise<HoldingRecord[]> {
     .split(',')
     .map((a) => a.trim())
     .filter(Boolean)
+    // Zerion only supports EVM addresses (0x...) — skip Bitcoin/Solana native addresses
+    .filter((a) => {
+      if (!a.startsWith('0x')) {
+        console.log(`[Zerion] skipping non-EVM address: ${a.slice(0, 12)}…`)
+        return false
+      }
+      return true
+    })
 
   if (addresses.length === 0) return []
 
-  const results = await Promise.allSettled(
-    addresses.map((addr) => fetchWalletPositions(addr, cfg.apiKey)),
-  )
+  // Fetch sequentially to avoid hitting Zerion rate limits (429)
+  const results: PromiseSettledResult<ZerionPosition[]>[] = []
+  for (let i = 0; i < addresses.length; i++) {
+    if (i > 0) await new Promise((r) => setTimeout(r, 600)) // 600ms between requests
+    results.push(await Promise.resolve().then(() =>
+      fetchWalletPositions(addresses[i]!, cfg.apiKey)
+        .then((v) => ({ status: 'fulfilled' as const, value: v }))
+        .catch((e) => ({ status: 'rejected' as const, reason: e })),
+    ))
+  }
 
   const holdings: HoldingRecord[] = []
   results.forEach((result, i) => {

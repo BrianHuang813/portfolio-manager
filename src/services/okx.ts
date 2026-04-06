@@ -107,9 +107,38 @@ export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   }
 
   console.log('[OKX] total merged count:', merged.length)
+
+  // For funding items without USD value, fetch market price from OKX public ticker
+  const needsPrice = merged.filter(
+    (d) => parseFloat(d.eq) > 0 && parseFloat(d.eqUsd ?? '0') === 0,
+  )
+
+  if (needsPrice.length > 0) {
+    await Promise.allSettled(
+      needsPrice.map(async (d) => {
+        // OKSOL → SOL-USDT, BETH → ETH-USDT, otherwise {ccy}-USDT
+        const alias: Record<string, string> = { OKSOL: 'SOL', BETH: 'ETH' }
+        const baseCcy = alias[d.ccy] ?? d.ccy
+        const instId = `${baseCcy}-USDT`
+        try {
+          const r = await fetch(`${OKX_BASE}/api/v5/market/ticker?instId=${instId}`)
+          if (!r.ok) return
+          const json = await r.json() as { code: string; data: Array<{ last: string }> }
+          if (json.code !== '0' || !json.data?.[0]?.last) return
+          const price = parseFloat(json.data[0].last)
+          const qty = parseFloat(d.eq)
+          d.eqUsd = (qty * price).toString()
+          console.log(`[OKX] price lookup ${d.ccy} via ${instId}: $${price} → eqUsd=$${d.eqUsd}`)
+        } catch {
+          // non-fatal — item stays with eqUsd=0 and gets filtered below
+        }
+      }),
+    )
+  }
+
   merged.forEach((d) => console.log(`[OKX]   ${d.ccy}: eq=${d.eq} eqUsd=${d.eqUsd ?? '0'}`))
 
-  // Filter: has any quantity AND has USD value (funding-only entries without eqUsd are excluded)
+  // Filter: has any quantity AND has USD value
   const nonZero = merged.filter(
     (d) => parseFloat(d.eq) > 0 && parseFloat(d.eqUsd ?? '0') > 0.01,
   )
