@@ -41,7 +41,10 @@ async function fetchOKXBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
   if (res.status === 401) throw new Error('OKX auth failed — check API key / secret / passphrase')
   if (!res.ok) throw new Error(`OKX balance failed: ${res.status}`)
 
-  const data = await res.json() as { data: Array<{ details: OKXDetail[] }> }
+  const data = await res.json() as { code: string; msg: string; data: Array<{ details: OKXDetail[] }> }
+  console.debug('[OKX] response code:', data.code, 'msg:', data.msg)
+  console.debug('[OKX] details count:', data.data?.[0]?.details?.length ?? 0)
+  if (data.code !== '0') throw new Error(`OKX API error ${data.code}: ${data.msg}`)
   return data.data?.[0]?.details ?? []
 }
 
