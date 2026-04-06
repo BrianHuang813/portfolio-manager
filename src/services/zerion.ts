@@ -1,5 +1,5 @@
-// Spec: F2.3 — Zerion API v1, multi-wallet aggregated
-// Basic Auth: apiKey as username, empty password
+// Zerion positions — routes through /api/zerion Vercel proxy to avoid CORS
+// API key is sent via X-Zerion-Key header, never in the URL
 
 import { getConfig } from '../utils/storage'
 import { normalizeZerion, type ZerionPosition } from '../utils/normalize'
@@ -8,7 +8,7 @@ import type { HoldingRecord } from '../types/holdings'
 
 interface ZerionConfig {
   apiKey: string
-  walletAddresses: string // comma-separated
+  walletAddresses: string
 }
 
 interface ZerionResponse {
@@ -19,13 +19,12 @@ async function fetchWalletPositions(
   address: string,
   apiKey: string,
 ): Promise<ZerionPosition[]> {
-  const auth = btoa(`${apiKey}:`)
-  const url = `https://api.zerion.io/v1/wallets/${address}/positions/?filter[positions]=only_simple&currency=usd&filter[trash]=only_non_trash&sort=-value`
+  // Always use the server-side proxy — avoids CORS regardless of environment
+  const url = `/api/zerion?address=${encodeURIComponent(address)}`
 
   const res = await fetch(url, {
     headers: {
-      Authorization: `Basic ${auth}`,
-      Accept: 'application/json',
+      'X-Zerion-Key': apiKey,
     },
   })
 

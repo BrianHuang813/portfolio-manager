@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/portfolio-manager">
+      <BrowserRouter basename="/">
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<Dashboard />} />
