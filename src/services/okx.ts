@@ -10,7 +10,7 @@ import type { HoldingRecord } from '../types/holdings'
 interface OKXConfig {
   apiKey: string
   secret: string
-  passphrase: string
+  passphrase?: string  // optional — leave blank if your API key has no passphrase
 }
 
 const OKX_BASE = 'https://www.okx.com'
@@ -29,7 +29,7 @@ async function buildOKXHeaders(
     'OK-ACCESS-KEY': cfg.apiKey,
     'OK-ACCESS-SIGN': sign,
     'OK-ACCESS-TIMESTAMP': timestamp,
-    'OK-ACCESS-PASSPHRASE': cfg.passphrase,
+    'OK-ACCESS-PASSPHRASE': cfg.passphrase ?? '',
     'Content-Type': 'application/json',
   }
 }
@@ -61,7 +61,7 @@ async function fetchOKXPrice(ccy: string): Promise<number> {
 
 export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   const cfg = getConfig<OKXConfig>(STORAGE_KEYS.okx)
-  if (!cfg?.apiKey || !cfg?.secret || !cfg?.passphrase) return []
+  if (!cfg?.apiKey || !cfg?.secret) return []
 
   const details = await fetchOKXBalance(cfg)
   const nonZero = details.filter((d) => parseFloat(d.eq) > 0)

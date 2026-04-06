@@ -74,9 +74,9 @@ export function SettingsForm() {
       <PlatformSection
         title="OKX Exchange" tag="OKX" saved={saved.okx ?? false}
         fields={[
-          { key: 'apiKey',     label: 'API Key',     placeholder: 'okx_api_key_…' },
-          { key: 'secret',     label: 'Secret Key',  type: 'password', placeholder: '••••••••' },
-          { key: 'passphrase', label: 'Passphrase',  type: 'password', placeholder: '••••••••' },
+          { key: 'apiKey',     label: 'API Key',                 placeholder: 'okx_api_key_…' },
+          { key: 'secret',     label: 'Secret Key', type: 'password', placeholder: '••••••••' },
+          { key: 'passphrase', label: 'Passphrase (optional)',   type: 'password', placeholder: 'leave blank if none' },
         ]}
         values={okx}
         onChange={(k, v) => setOkx((s) => ({ ...s, [k]: v }))}
