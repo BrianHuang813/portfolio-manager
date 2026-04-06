@@ -49,7 +49,7 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
     }))
 
   const filtered = useMemo(() => {
-    let rows = [...holdings]
+    let rows = holdings.filter((h) => h.marketValue >= 10)
     const q = tableFilters.search.toLowerCase()
     if (q) rows = rows.filter((h) =>
       h.symbol.toLowerCase().includes(q) || h.name.toLowerCase().includes(q))

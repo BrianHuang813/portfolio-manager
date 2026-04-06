@@ -85,13 +85,14 @@ async function fetchFundingBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
 }
 
 // Simple Earn (賺幣) — /api/v5/finance/savings/balance
-// Requires "Savings" read permission on the API key. Non-fatal if missing.
+// Routed through Vercel proxy (/api/okx) to bypass CORS on this endpoint.
 async function fetchSavingsBalance(cfg: OKXConfig): Promise<OKXDetail[]> {
   const path = '/api/v5/finance/savings/balance'
   const headers = await buildOKXHeaders(cfg, 'GET', path)
-  const res = await fetch(`${OKX_BASE}${path}`, { headers })
+  // Use Vercel proxy — OKX blocks CORS preflight for savings endpoint
+  const res = await fetch(`/api/okx?path=${encodeURIComponent(path)}`, { headers })
   if (!res.ok) {
-    console.log('[OKX savings] fetch failed:', res.status, '(API key may lack Savings permission)')
+    console.log('[OKX savings] fetch failed:', res.status)
     return []
   }
 
@@ -132,24 +133,31 @@ export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
   ])
 
   // Merge all three: deduplicate by ccy, prefer trading (has eqUsd) over funding/savings
+  // Track ccys whose qty was bumped from funding/savings — these need price re-lookup
+  // even if trading had a tiny eqUsd from dust (e.g. LINK: trading dust + funding 1.73 LINK)
   const tradingMap = new Map(tradingDetails.map((d) => [d.ccy, d]))
   const merged = [...tradingDetails]
+  const needsPriceLookup = new Set<string>()
+
   for (const fd of [...fundingDetails, ...savingsDetails]) {
     if (!tradingMap.has(fd.ccy)) {
       merged.push(fd)
-      tradingMap.set(fd.ccy, fd) // prevent savings+funding duplicate
+      tradingMap.set(fd.ccy, fd)
+      needsPriceLookup.add(fd.ccy)
     } else {
-      // Add savings/funding qty on top of trading qty for same ccy
+      // Add funding/savings qty on top of trading; invalidate eqUsd since it no longer reflects total qty
       const existing = tradingMap.get(fd.ccy)!
       existing.eq = (parseFloat(existing.eq) + parseFloat(fd.eq)).toString()
+      existing.eqUsd = '0' // force price re-lookup below
+      needsPriceLookup.add(fd.ccy)
     }
   }
 
   console.log('[OKX] total merged count:', merged.length)
 
-  // For funding items without USD value, fetch market price from OKX public ticker
+  // Fetch market prices for items in needsPriceLookup set (funding/savings items, or merged qty)
   const needsPrice = merged.filter(
-    (d) => parseFloat(d.eq) > 0 && parseFloat(d.eqUsd ?? '0') === 0,
+    (d) => needsPriceLookup.has(d.ccy) && parseFloat(d.eq) > 0,
   )
 
   if (needsPrice.length > 0) {
