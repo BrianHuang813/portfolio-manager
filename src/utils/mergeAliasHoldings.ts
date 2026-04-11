@@ -9,6 +9,7 @@ const CANONICAL_MAP: Record<string, string> = {
   WBTC:  'BTC',
   CBBTC: 'BTC',
   BTCB:  'BTC',
+  pumpBTC: 'BTC',
   // Ethereum variants
   WETH:   'ETH',
   STETH:  'ETH',
