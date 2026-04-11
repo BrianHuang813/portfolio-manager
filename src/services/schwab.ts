@@ -47,10 +47,10 @@ async function refreshSchwabToken(cfg: SchwabConfig): Promise<string> {
 }
 
 async function getSchwabAccountHashes(accessToken: string): Promise<string[]> {
-  const res = await fetch('https://api.schwabapi.com/trader/v1/accounts', {
+  const res = await fetch('https://api.schwabapi.com/trader/v1/accounts/accountNumbers', {
     headers: { Authorization: `Bearer ${accessToken}` },
   })
-  if (!res.ok) throw new Error(`Schwab /accounts failed: ${res.status}`)
+  if (!res.ok) throw new Error(`Schwab /accounts/accountNumbers failed: ${res.status}`)
   const data = await res.json() as Array<{ hashValue: string }>
   return data.map((a) => a.hashValue)
 }
