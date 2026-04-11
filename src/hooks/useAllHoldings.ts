@@ -9,6 +9,7 @@ import { fetchZerionHoldings } from '../services/zerion'
 import { fetchFutuHoldings } from '../services/futu'
 import { fetchBitcoinHoldings } from '../services/bitcoin'
 import { saveSnapshot } from '../utils/snapshot'
+import { mergeAliasHoldings } from '../utils/mergeAliasHoldings'
 import { useAppStore } from '../store/useAppStore'
 import { REFRESH_INTERVAL_MS } from '../config/constants'
 import type { HoldingRecord, Platform } from '../types/holdings'
@@ -73,7 +74,7 @@ async function fetchAllHoldings(): Promise<FetchResult> {
       : String(bitcoinResult.reason)
   }
 
-  return { holdings, platformErrors, futuWarning }
+  return { holdings: mergeAliasHoldings(holdings), platformErrors, futuWarning }
 }
 
 export function useAllHoldings() {
