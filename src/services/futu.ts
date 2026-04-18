@@ -23,8 +23,12 @@ export async function fetchFutuHoldings(): Promise<FutuFetchResult> {
     return { holdings: [], warning: 'Google Sheets not configured — add spreadsheetId in Settings.' }
   }
 
+  // Accept either a bare ID or a full Google Sheets URL
+  const idMatch = cfg.spreadsheetId.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/)
+  const spreadsheetId = idMatch ? idMatch[1] : cfg.spreadsheetId
+
   const range = 'Futu!A:K'
-  let url = `https://sheets.googleapis.com/v4/spreadsheets/${cfg.spreadsheetId}/values/${encodeURIComponent(range)}`
+  let url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${encodeURIComponent(range)}`
   if (cfg.sheetsApiKey) {
     url += `?key=${cfg.sheetsApiKey}`
   }
