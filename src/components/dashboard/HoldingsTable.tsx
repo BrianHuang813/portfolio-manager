@@ -5,7 +5,7 @@
 import { useMemo, useCallback } from 'react'
 import { useAppStore, type SortKey } from '../../store/useAppStore'
 import { TABLE_PAGE_SIZE } from '../../config/constants'
-import type { HoldingRecord } from '../../types/holdings'
+import type { HoldingRecord, Platform } from '../../types/holdings'
 
 interface Props { holdings: HoldingRecord[]; isLoading: boolean }
 
@@ -54,7 +54,8 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
     if (q) rows = rows.filter((h) =>
       h.symbol.toLowerCase().includes(q) || h.name.toLowerCase().includes(q))
     if (tableFilters.type !== 'all') rows = rows.filter((h) => h.type === tableFilters.type)
-    if (tableFilters.platform !== 'all') rows = rows.filter((h) => h.platform === tableFilters.platform)
+    if (tableFilters.platform !== 'all') rows = rows.filter((h) =>
+      h.platforms ? h.platforms.includes(tableFilters.platform as Platform) : h.platform === tableFilters.platform)
     return rows
   }, [holdings, tableFilters])
 
@@ -154,7 +155,7 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
                     {/* Platform */}
                     <td className="px-4 py-3">
                       <span className="font-body text-label-sm text-muted uppercase tracking-[0.06em]">
-                        {h.platform}
+                        {(h.platforms ?? [h.platform]).join(', ')}
                       </span>
                     </td>
 

@@ -51,6 +51,8 @@ export function mergeAliasHoldings(holdings: HoldingRecord[]): HoldingRecord[] {
     const canonical = canonicalSymbol(largest.symbol)
     const mostRecent = group.reduce((a, b) => a.lastUpdated > b.lastUpdated ? a : b).lastUpdated
 
+    const uniquePlatforms = [...new Set(group.map((h) => h.platform))]
+
     result.push({
       symbol: canonical,
       name: largest.name.replace(largest.symbol, canonical),
@@ -60,6 +62,7 @@ export function mergeAliasHoldings(holdings: HoldingRecord[]): HoldingRecord[] {
       unrealizedPL: totalUnrealizedPL,
       unrealizedPLPercent,
       platform: largest.platform,
+      platforms: uniquePlatforms,
       type: largest.type,
       lastUpdated: mostRecent,
     })

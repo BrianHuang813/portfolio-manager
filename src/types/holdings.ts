@@ -12,6 +12,7 @@ export interface HoldingRecord {
   unrealizedPL: number        // USD
   unrealizedPLPercent: number // e.g. 12.34 (percent, not decimal)
   platform: Platform
+  platforms?: Platform[]   // set when holding is merged from multiple sources
   type: AssetType
   lastUpdated: string         // ISO 8601
   sourceWallet?: string       // Zerion only: shortened "0x123...abc"
