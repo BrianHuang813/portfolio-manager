@@ -74,8 +74,8 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
   const sorted = useMemo(() => {
     const { key, direction } = sortConfig
     return [...filtered].sort((a, b) => {
-      const av = key === 'allocationPct' ? allocPct(a) : (a as Record<string, unknown>)[key]
-      const bv = key === 'allocationPct' ? allocPct(b) : (b as Record<string, unknown>)[key]
+      const av = key === 'allocationPct' ? allocPct(a) : (a as unknown as Record<string, unknown>)[key]
+      const bv = key === 'allocationPct' ? allocPct(b) : (b as unknown as Record<string, unknown>)[key]
       if (typeof av === 'number' && typeof bv === 'number')
         return direction === 'asc' ? av - bv : bv - av
       return direction === 'asc'
