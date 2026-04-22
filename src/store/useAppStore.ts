@@ -4,7 +4,7 @@
 import { create } from 'zustand'
 import type { AssetType, Platform, PlatformState } from '../types/holdings'
 
-export type SortKey = 'symbol' | 'marketValue' | 'unrealizedPLPercent' | 'platform' | 'type' | 'qty'
+export type SortKey = 'symbol' | 'marketValue' | 'unrealizedPLPercent' | 'platform' | 'type' | 'qty' | 'allocationPct'
 export type SortDirection = 'asc' | 'desc'
 
 export interface TableFilters {

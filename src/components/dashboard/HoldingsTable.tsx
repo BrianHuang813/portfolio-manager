@@ -19,9 +19,10 @@ const fmtCompact = new Intl.NumberFormat('en-US', {
 const COLS: Array<{ key: SortKey; label: string; right?: boolean }> = [
   { key: 'symbol',             label: 'Symbol' },
   { key: 'platform',           label: 'Platform' },
-  { key: 'qty',                label: 'Qty',      right: true },
-  { key: 'marketValue',        label: 'Value',    right: true },
-  { key: 'unrealizedPLPercent',label: 'PnL %',    right: true },
+  { key: 'qty',                label: 'Qty',       right: true },
+  { key: 'marketValue',        label: 'Value',     right: true },
+  { key: 'unrealizedPLPercent',label: 'PnL %',     right: true },
+  { key: 'allocationPct',      label: 'Alloc %',   right: true },
 ]
 
 function SkeletonRow() {
@@ -32,7 +33,6 @@ function SkeletonRow() {
           <div className="skeleton h-3 w-full" />
         </td>
       ))}
-      <td className="px-4 py-3"><div className="skeleton h-3 w-16" /></td>
     </tr>
   )
 }
@@ -48,6 +48,18 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
       setSelectedSymbol: s.setSelectedSymbol,
     }))
 
+  // Totals from full unfiltered holdings for allocation % calculation
+  const typeTotals = useMemo(() => {
+    const stock  = holdings.filter(h => h.type === 'stock').reduce((s, h) => s + h.marketValue, 0)
+    const crypto = holdings.filter(h => h.type === 'crypto').reduce((s, h) => s + h.marketValue, 0)
+    return { stock, crypto }
+  }, [holdings])
+
+  const allocPct = useCallback((h: HoldingRecord) => {
+    const total = h.type === 'stock' ? typeTotals.stock : typeTotals.crypto
+    return total > 0 ? (h.marketValue / total) * 100 : 0
+  }, [typeTotals])
+
   const filtered = useMemo(() => {
     let rows = holdings.filter((h) => h.marketValue >= 10)
     const q = tableFilters.search.toLowerCase()
@@ -62,14 +74,15 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
   const sorted = useMemo(() => {
     const { key, direction } = sortConfig
     return [...filtered].sort((a, b) => {
-      const av = a[key], bv = b[key]
+      const av = key === 'allocationPct' ? allocPct(a) : (a as Record<string, unknown>)[key]
+      const bv = key === 'allocationPct' ? allocPct(b) : (b as Record<string, unknown>)[key]
       if (typeof av === 'number' && typeof bv === 'number')
         return direction === 'asc' ? av - bv : bv - av
       return direction === 'asc'
         ? String(av).localeCompare(String(bv))
         : String(bv).localeCompare(String(av))
     })
-  }, [filtered, sortConfig])
+  }, [filtered, sortConfig, allocPct])
 
   const totalPages = Math.ceil(sorted.length / TABLE_PAGE_SIZE)
   const page = Math.min(tablePage, Math.max(0, totalPages - 1))
@@ -112,9 +125,6 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
                   </th>
                 )
               })}
-              <th className="px-4 py-2.5 text-left font-body text-label-sm uppercase tracking-[0.08em] text-muted">
-                Wallet
-              </th>
             </tr>
           </thead>
 
@@ -174,9 +184,9 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
                       {up && h.unrealizedPL !== 0 ? '+' : ''}{h.unrealizedPLPercent.toFixed(2)}%
                     </td>
 
-                    {/* Wallet */}
-                    <td className="px-4 py-3 font-body text-label-sm text-muted">
-                      {h.sourceWallet ?? '—'}
+                    {/* Alloc % — share of total stock or crypto */}
+                    <td className="px-4 py-3 text-right font-body text-label-md text-muted tabular-nums">
+                      {allocPct(h).toFixed(1)}%
                     </td>
                   </tr>
                 )
