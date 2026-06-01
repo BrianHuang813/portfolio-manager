@@ -12,6 +12,7 @@ const CANONICAL_MAP: Record<string, string> = {
   PUMPBTC: 'BTC',
   // Ethereum variants
   WETH:   'ETH',
+  WEETH:  'ETH',
   STETH:  'ETH',
   WSTETH: 'ETH',
   CBETH:  'ETH',

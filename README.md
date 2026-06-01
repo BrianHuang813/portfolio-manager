@@ -36,13 +36,15 @@ Navigate to **Settings** in the app. Enter API credentials for each platform —
 
 1. Register at [developer.schwab.com](https://developer.schwab.com/products/trader-api--individual)
 2. Create an Individual Developer app — note your `App Key` and `App Secret`
-3. Obtain an initial `refresh_token` manually via Postman or the Schwab OAuth flow:
-   - Authorization URL: `https://api.schwabapi.com/v1/oauth/authorize`
-   - Token URL: `https://api.schwabapi.com/v1/oauth/token`
-   - Redirect URI: `http://localhost:5173/portfolio-manager/` (dev only)
-4. Paste `appKey`, `appSecret`, and `refreshToken` into Settings → Schwab
-5. The app auto-refreshes the access token on every fetch
-6. `refresh_token` expires every ~7 days — repeat step 3 when expired
+3. Set the Callback URL in your Schwab app to `https://127.0.0.1`
+4. Run the helper script to obtain a `refresh_token`:
+   ```bash
+   npm run schwab-auth
+   ```
+   Enter your App Key, App Secret, and `https://127.0.0.1` as the Callback URL. After authorizing in the browser, copy the full redirect URL from the address bar (the page will error — that's expected) and paste it into the terminal. The script prints the new `refresh_token`.
+5. Paste `appKey`, `appSecret`, and `refreshToken` into Settings → Schwab
+6. The app auto-refreshes the access token on every fetch
+7. `refresh_token` expires every ~7 days — re-run `npm run schwab-auth` to renew
 
 ### OKX
 

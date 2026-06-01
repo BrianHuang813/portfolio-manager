@@ -20,6 +20,7 @@ const COLS: Array<{ key: SortKey; label: string; right?: boolean }> = [
   { key: 'symbol',             label: 'Symbol' },
   { key: 'platform',           label: 'Platform' },
   { key: 'qty',                label: 'Qty',       right: true },
+  { key: 'costBasis',          label: 'Avg Cost',  right: true },
   { key: 'marketValue',        label: 'Value',     right: true },
   { key: 'unrealizedPLPercent',label: 'PnL %',     right: true },
   { key: 'allocationPct',      label: 'Alloc %',   right: true },
@@ -135,7 +136,7 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
               : rows.length === 0
               ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-10 text-center font-body text-label-md text-muted italic">
+                  <td colSpan={COLS.length} className="px-4 py-10 text-center font-body text-label-md text-muted italic">
                     No holdings match current filters
                   </td>
                 </tr>
@@ -172,6 +173,11 @@ export function HoldingsTable({ holdings, isLoading }: Props) {
                     {/* Qty */}
                     <td className="px-4 py-3 text-right font-body text-label-md text-on-s tabular-nums">
                       {h.qty < 1 ? h.qty.toFixed(4) : h.qty.toFixed(2)}
+                    </td>
+
+                    {/* Avg Cost */}
+                    <td className="px-4 py-3 text-right font-body text-label-md text-muted tabular-nums">
+                      {h.type === 'stock' && h.costBasis > 0 ? fmtUSD.format(h.costBasis) : '-'}
                     </td>
 
                     {/* Market Value */}
