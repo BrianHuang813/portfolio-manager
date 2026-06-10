@@ -3,9 +3,6 @@
 /** Auto-refresh interval: 10 minutes */
 export const REFRESH_INTERVAL_MS = 10 * 60 * 1000
 
-/** Maximum days of daily snapshots to retain in localStorage */
-export const MAX_SNAPSHOT_DAYS = 90
-
 /** Finnhub news React Query stale time: 30 minutes */
 export const NEWS_STALE_MS = 30 * 60 * 1000
 
@@ -23,4 +20,5 @@ export const STORAGE_KEYS = {
   finnhub: 'cfg_finnhub',
   gsheets: 'cfg_gsheets',
   snapshotHistory: 'snapshot_history',
+  holdingsCache: 'holdings_cache',
 } as const

@@ -13,7 +13,11 @@ const fmtFull = new Intl.NumberFormat('en-US', {
   style: 'currency', currency: 'USD', maximumFractionDigits: 0,
 })
 
-export function PerformanceChart() {
+interface Props {
+  snapshotRevision: number
+}
+
+export function PerformanceChart({ snapshotRevision }: Props) {
   const { data, lineColor } = useMemo(() => {
     const snaps = loadSnapshots()
     const data = snaps.map((s) => ({
@@ -24,7 +28,7 @@ export function PerformanceChart() {
     const last  = data.at(-1)?.value ?? 0
     const lineColor = last >= first ? '#4bdfa4' : '#ea6767'
     return { data, lineColor }
-  }, [])
+  }, [snapshotRevision])
 
   if (data.length < 2) {
     return (

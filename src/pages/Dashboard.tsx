@@ -18,7 +18,7 @@ import { NewsPanel } from '../components/dashboard/NewsPanel'
 import { Button } from '../components/ui/Button'
 
 export function Dashboard() {
-  const { holdings, isLoading, isFetching } = useAllHoldings()
+  const { holdings, isLoading, isFetching, snapshotRevision } = useAllHoldings()
   const futuWarning = useAppStore((s) => s.futuWarning)
   const isFirstLoad  = isLoading && holdings.length === 0
 
@@ -58,7 +58,7 @@ export function Dashboard() {
 
           {/* Performance chart — sits in cl block */}
           <section className="bg-cl px-6 py-5">
-            <PerformanceChart />
+            <PerformanceChart snapshotRevision={snapshotRevision} />
           </section>
 
           {/* Holdings table section */}

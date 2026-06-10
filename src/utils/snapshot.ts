@@ -1,7 +1,7 @@
 // Spec: F4.3 — append-only JSONL snapshot history in localStorage
-// One entry per calendar day (overwrite same day). Prune > MAX_SNAPSHOT_DAYS.
+// One entry per calendar day (overwrite same day). History is retained indefinitely.
 
-import { STORAGE_KEYS, MAX_SNAPSHOT_DAYS } from '../config/constants'
+import { STORAGE_KEYS } from '../config/constants'
 import { getRawString, setRawString } from './storage'
 import type { DailySnapshot } from '../types/holdings'
 
@@ -38,21 +38,15 @@ export function saveSnapshot(totalValue: number): void {
   })
 
   const newEntry = JSON.stringify({ date: today, totalValue, timestamp })
-  const pruned = pruneOldSnapshots([...filtered, newEntry])
-  setRawString(STORAGE_KEYS.snapshotHistory, pruned.join('\n'))
-}
-
-export function pruneOldSnapshots(lines: string[]): string[] {
-  const cutoff = new Date()
-  cutoff.setDate(cutoff.getDate() - MAX_SNAPSHOT_DAYS)
-  const cutoffStr = cutoff.toISOString().slice(0, 10)
-  return lines.filter((l) => {
+  const valid = [...filtered, newEntry].filter((line) => {
     try {
-      return (JSON.parse(l) as DailySnapshot).date >= cutoffStr
+      JSON.parse(line)
+      return true
     } catch {
       return false
     }
   })
+  setRawString(STORAGE_KEYS.snapshotHistory, valid.join('\n'))
 }
 
 /** Returns the snapshot for a given date string "YYYY-MM-DD", or null */

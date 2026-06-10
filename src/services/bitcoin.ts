@@ -70,6 +70,15 @@ export async function fetchBitcoinHoldings(): Promise<HoldingRecord[]> {
     ),
   ])
 
+  if (btcPrice <= 0) {
+    throw new Error('Bitcoin price fetch failed')
+  }
+
+  const failed = balanceResults.find((result) => !result.ok)
+  if (failed) {
+    throw new Error(`Bitcoin balance fetch failed for ${failed.addr}`)
+  }
+
   const holdings: HoldingRecord[] = []
 
   for (const result of balanceResults) {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { saveSnapshot, loadSnapshots, pruneOldSnapshots } from '../utils/snapshot'
+import { saveSnapshot, loadSnapshots } from '../utils/snapshot'
 
 // Mock localStorage
 const store: Record<string, string> = {}
@@ -30,20 +30,11 @@ describe('saveSnapshot', () => {
   })
 })
 
-describe('pruneOldSnapshots', () => {
-  it('removes entries older than 90 days', () => {
+describe('snapshot retention', () => {
+  it('keeps entries older than 90 days', () => {
     const old = JSON.stringify({ date: '2020-01-01', totalValue: 1000, timestamp: '2020-01-01T00:00:00Z' })
-    const recent = JSON.stringify({ date: new Date().toISOString().slice(0, 10), totalValue: 2000, timestamp: new Date().toISOString() })
-    const result = pruneOldSnapshots([old, recent])
-    expect(result).toHaveLength(1)
-    expect(JSON.parse(result[0]!).totalValue).toBe(2000)
-  })
-
-  it('keeps entries within 90 days', () => {
-    const d = new Date()
-    d.setDate(d.getDate() - 45)
-    const mid = JSON.stringify({ date: d.toISOString().slice(0, 10), totalValue: 5000, timestamp: d.toISOString() })
-    const result = pruneOldSnapshots([mid])
-    expect(result).toHaveLength(1)
+    store.snapshot_history = old
+    saveSnapshot(2000)
+    expect(loadSnapshots()).toHaveLength(2)
   })
 })

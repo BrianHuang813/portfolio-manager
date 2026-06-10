@@ -63,6 +63,13 @@ export async function fetchZerionHoldings(): Promise<HoldingRecord[]> {
     ))
   }
 
+  const failed = results.find((result) => result.status === 'rejected')
+  if (failed?.status === 'rejected') {
+    throw failed.reason instanceof Error
+      ? failed.reason
+      : new Error(String(failed.reason))
+  }
+
   const holdings: HoldingRecord[] = []
   results.forEach((result, i) => {
     if (result.status === 'fulfilled') {

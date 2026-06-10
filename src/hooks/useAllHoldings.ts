@@ -2,13 +2,14 @@
 // Updates Zustand platformStatus per result; saves JSONL snapshot on success.
 
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchSchwabHoldings } from '../services/schwab'
 import { fetchOKXHoldings } from '../services/okx'
 import { fetchZerionHoldings } from '../services/zerion'
 import { fetchFutuHoldings } from '../services/futu'
 import { fetchBitcoinHoldings } from '../services/bitcoin'
 import { saveSnapshot } from '../utils/snapshot'
+import { loadCachedHoldings, saveCachedHoldings } from '../utils/holdingsCache'
 import { mergeAliasHoldings } from '../utils/mergeAliasHoldings'
 import { useAppStore } from '../store/useAppStore'
 import { REFRESH_INTERVAL_MS } from '../config/constants'
@@ -18,6 +19,7 @@ interface FetchResult {
   holdings: HoldingRecord[]
   platformErrors: Partial<Record<Platform, string>>
   futuWarning: string | null
+  canSaveSnapshot: boolean
 }
 
 async function fetchAllHoldings(): Promise<FetchResult> {
@@ -32,54 +34,70 @@ async function fetchAllHoldings(): Promise<FetchResult> {
   const holdings: HoldingRecord[] = []
   const platformErrors: Partial<Record<Platform, string>> = {}
   let futuWarning: string | null = null
+  let canSaveSnapshot = true
 
-  if (schwabResult.status === 'fulfilled') {
-    holdings.push(...schwabResult.value)
-  } else {
-    platformErrors.schwab = schwabResult.reason instanceof Error
-      ? schwabResult.reason.message
-      : String(schwabResult.reason)
+  const collect = (
+    platform: Platform,
+    result: PromiseSettledResult<HoldingRecord[]>,
+  ) => {
+    if (result.status === 'fulfilled') {
+      holdings.push(...result.value)
+      saveCachedHoldings(platform, result.value)
+      return
+    }
+
+    platformErrors[platform] = result.reason instanceof Error
+      ? result.reason.message
+      : String(result.reason)
+    const cached = loadCachedHoldings(platform)
+    if (cached) {
+      holdings.push(...cached)
+    } else {
+      canSaveSnapshot = false
+    }
   }
 
-  if (okxResult.status === 'fulfilled') {
-    holdings.push(...okxResult.value)
-  } else {
-    platformErrors.okx = okxResult.reason instanceof Error
-      ? okxResult.reason.message
-      : String(okxResult.reason)
-  }
-
-  if (zerionResult.status === 'fulfilled') {
-    holdings.push(...zerionResult.value)
-  } else {
-    platformErrors.zerion = zerionResult.reason instanceof Error
-      ? zerionResult.reason.message
-      : String(zerionResult.reason)
-  }
+  collect('schwab', schwabResult)
+  collect('okx', okxResult)
+  collect('zerion', zerionResult)
 
   if (futuResult.status === 'fulfilled') {
-    holdings.push(...futuResult.value.holdings)
     futuWarning = futuResult.value.warning
+    const fetchFailure = futuWarning !== null
+      && !futuWarning.startsWith('Google Sheets not configured')
+      ? futuWarning
+      : null
+
+    if (fetchFailure) {
+      platformErrors.futu = fetchFailure
+      const cached = loadCachedHoldings('futu')
+      if (cached) {
+        holdings.push(...cached)
+      } else {
+        canSaveSnapshot = false
+      }
+    } else {
+      holdings.push(...futuResult.value.holdings)
+      saveCachedHoldings('futu', futuResult.value.holdings)
+    }
   } else {
-    platformErrors.futu = futuResult.reason instanceof Error
-      ? futuResult.reason.message
-      : String(futuResult.reason)
+    collect('futu', futuResult)
   }
 
-  if (bitcoinResult.status === 'fulfilled') {
-    holdings.push(...bitcoinResult.value)
-  } else {
-    platformErrors.bitcoin = bitcoinResult.reason instanceof Error
-      ? bitcoinResult.reason.message
-      : String(bitcoinResult.reason)
-  }
+  collect('bitcoin', bitcoinResult)
 
-  return { holdings: mergeAliasHoldings(holdings), platformErrors, futuWarning }
+  return {
+    holdings: mergeAliasHoldings(holdings),
+    platformErrors,
+    futuWarning,
+    canSaveSnapshot,
+  }
 }
 
 export function useAllHoldings() {
   const setPlatformStatus = useAppStore((s) => s.setPlatformStatus)
   const setFutuWarning = useAppStore((s) => s.setFutuWarning)
+  const [snapshotRevision, setSnapshotRevision] = useState(0)
 
   // Set all platforms to loading before fetch
   const query = useQuery<FetchResult>({
@@ -115,7 +133,10 @@ export function useAllHoldings() {
 
     // Save daily snapshot
     const total = query.data.holdings.reduce((sum, h) => sum + h.marketValue, 0)
-    if (total > 0) saveSnapshot(total)
+    if (total > 0 && query.data.canSaveSnapshot) {
+      saveSnapshot(total)
+      setSnapshotRevision((revision) => revision + 1)
+    }
   }, [query.data, setPlatformStatus, setFutuWarning])
 
   return {
@@ -125,5 +146,6 @@ export function useAllHoldings() {
     isError: query.isError,
     refetch: query.refetch,
     dataUpdatedAt: query.dataUpdatedAt,
+    snapshotRevision,
   }
 }

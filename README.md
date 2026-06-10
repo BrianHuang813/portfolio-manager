@@ -146,4 +146,4 @@ src/
 State layers:
 - **React Query** — server state, caching, auto-refetch
 - **Zustand** — UI state (filters, selected symbol, platform badges)
-- **localStorage** — API keys + JSONL snapshot history (90-day rolling)
+- **localStorage** — API keys, last successful holdings per platform, and long-term JSONL snapshot history
