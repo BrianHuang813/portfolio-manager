@@ -18,7 +18,7 @@ beforeEach(() => {
 })
 
 describe('fetchZerionHoldings', () => {
-  it('sends the API key using Zerion Basic authorization', async () => {
+  it('sends the encoded Basic credential in the proxy request body', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(
       JSON.stringify({ data: [] }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
@@ -28,19 +28,26 @@ describe('fetchZerionHoldings', () => {
     await fetchZerionHoldings()
 
     expect(fetchMock).toHaveBeenCalledWith(
-      '/api/zerion?address=0x1234567890abcdef',
-      { headers: { Authorization: `Basic ${btoa('test-api-key:')}` } },
+      '/api/zerion',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          address: '0x1234567890abcdef',
+          credential: btoa('test-api-key:'),
+        }),
+      },
     )
   })
 
   it('includes the proxy response when authentication fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(
-      JSON.stringify({ error: 'Missing Zerion Basic authorization' }),
+      JSON.stringify({ error: 'Missing Zerion credential' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } },
     )))
 
     await expect(fetchZerionHoldings()).rejects.toThrow(
-      '400 {"error":"Missing Zerion Basic authorization"}',
+      '400 {"error":"Missing Zerion credential"}',
     )
   })
 })
