@@ -18,7 +18,7 @@ beforeEach(() => {
 })
 
 describe('fetchZerionHoldings', () => {
-  it('sends the API key using bearer authorization', async () => {
+  it('sends the API key using Zerion Basic authorization', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(
       JSON.stringify({ data: [] }),
       { status: 200, headers: { 'Content-Type': 'application/json' } },
@@ -29,18 +29,18 @@ describe('fetchZerionHoldings', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/zerion?address=0x1234567890abcdef',
-      { headers: { Authorization: 'Bearer test-api-key' } },
+      { headers: { Authorization: `Basic ${btoa('test-api-key:')}` } },
     )
   })
 
   it('includes the proxy response when authentication fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(
-      JSON.stringify({ error: 'Missing Zerion API authorization' }),
+      JSON.stringify({ error: 'Missing Zerion Basic authorization' }),
       { status: 400, headers: { 'Content-Type': 'application/json' } },
     )))
 
     await expect(fetchZerionHoldings()).rejects.toThrow(
-      '400 {"error":"Missing Zerion API authorization"}',
+      '400 {"error":"Missing Zerion Basic authorization"}',
     )
   })
 })

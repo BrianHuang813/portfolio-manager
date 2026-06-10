@@ -1,5 +1,5 @@
 // Zerion positions — routes through /api/zerion Vercel proxy to avoid CORS
-// API key is sent via the standard Authorization header, never in the URL.
+// API key is encoded as HTTP Basic Auth per Zerion's API documentation.
 
 import { getConfig } from '../utils/storage'
 import { normalizeZerion, type ZerionPosition } from '../utils/normalize'
@@ -21,10 +21,11 @@ async function fetchWalletPositions(
 ): Promise<ZerionPosition[]> {
   // Always use the server-side proxy — avoids CORS regardless of environment
   const url = `/api/zerion?address=${encodeURIComponent(address)}`
+  const authorization = `Basic ${btoa(`${apiKey}:`)}`
 
   const res = await fetch(url, {
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: authorization,
     },
   })
 

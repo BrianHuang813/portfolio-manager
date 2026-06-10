@@ -8,6 +8,9 @@ dist/
 .env.local
 .env
 
+# Local Schwab OAuth helper contains App Key and App Secret
+scripts/schwab-auth.mjs
+
 # Editor
 .vscode/
 .idea/
