@@ -1,5 +1,5 @@
 // Zerion positions — routes through /api/zerion Vercel proxy to avoid CORS
-// API key is sent via X-Zerion-Key header, never in the URL
+// API key is sent via the standard Authorization header, never in the URL.
 
 import { getConfig } from '../utils/storage'
 import { normalizeZerion, type ZerionPosition } from '../utils/normalize'
@@ -24,11 +24,16 @@ async function fetchWalletPositions(
 
   const res = await fetch(url, {
     headers: {
-      'X-Zerion-Key': apiKey,
+      Authorization: `Bearer ${apiKey}`,
     },
   })
 
-  if (!res.ok) throw new Error(`Zerion fetch failed for ${address}: ${res.status}`)
+  if (!res.ok) {
+    const detail = await res.text()
+    throw new Error(
+      `Zerion fetch failed for ${address}: ${res.status}${detail ? ` ${detail}` : ''}`,
+    )
+  }
   const data = await res.json() as ZerionResponse
   return data.data ?? []
 }
@@ -36,6 +41,8 @@ async function fetchWalletPositions(
 export async function fetchZerionHoldings(): Promise<HoldingRecord[]> {
   const cfg = getConfig<ZerionConfig>(STORAGE_KEYS.zerion)
   if (!cfg?.apiKey || !cfg?.walletAddresses) return []
+  const apiKey = cfg.apiKey.trim()
+  if (!apiKey) return []
 
   const addresses = cfg.walletAddresses
     .split(',')
@@ -57,7 +64,7 @@ export async function fetchZerionHoldings(): Promise<HoldingRecord[]> {
   for (let i = 0; i < addresses.length; i++) {
     if (i > 0) await new Promise((r) => setTimeout(r, 600)) // 600ms between requests
     results.push(await Promise.resolve().then(() =>
-      fetchWalletPositions(addresses[i]!, cfg.apiKey)
+      fetchWalletPositions(addresses[i]!, apiKey)
         .then((v) => ({ status: 'fulfilled' as const, value: v }))
         .catch((e) => ({ status: 'rejected' as const, reason: e })),
     ))
