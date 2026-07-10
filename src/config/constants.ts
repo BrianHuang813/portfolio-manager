@@ -21,4 +21,5 @@ export const STORAGE_KEYS = {
   gsheets: 'cfg_gsheets',
   snapshotHistory: 'snapshot_history',
   holdingsCache: 'holdings_cache',
+  positionStrategy: 'position_strategy',
 } as const

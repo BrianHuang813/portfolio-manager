@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AppShell } from './components/layout/AppShell'
 import { Dashboard } from './pages/Dashboard'
 import { Settings } from './pages/Settings'
+import { PositionManagement } from './pages/PositionManagement'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -24,6 +25,7 @@ export default function App() {
           <Route element={<AppShell />}>
             <Route index element={<Dashboard />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="position-management" element={<PositionManagement />} />
           </Route>
         </Routes>
       </BrowserRouter>

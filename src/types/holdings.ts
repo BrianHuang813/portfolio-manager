@@ -31,6 +31,22 @@ export interface NewsArticle {
   url: string
 }
 
+export interface PositionAssumption {
+  conviction: number        // probability from 0 to 1
+  bullMultiple: number      // upside expressed as a multiple of capital
+  bearMultiple: number      // absolute downside expressed as a multiple of capital
+  note: string
+}
+
+export interface PositionStrategy {
+  fractionalKelly: number   // e.g. 0.5 for half-Kelly
+  targetExposure: number    // portfolio fraction allocated to positions, from 0 to 1
+  maxPosition: number       // maximum fraction of the portfolio in one position, from 0 to 1
+  rebalanceTolerance: number
+  assumptions: Record<string, PositionAssumption>
+  correlations: Record<string, Record<string, number>>
+}
+
 export type PlatformStatus = 'idle' | 'loading' | 'success' | 'error'
 
 export interface PlatformState {

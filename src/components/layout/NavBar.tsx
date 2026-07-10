@@ -20,12 +20,13 @@ export function NavBar({ onRefresh, isFetching }: NavBarProps) {
         {/* Wordmark */}
         <div className="flex items-center gap-8">
           <span className="font-display font-800 text-[0.9rem] tracking-[0.12em] uppercase text-primary">
-            Brian<span className="text-gain">_</span>Ledger
+            Ledger
           </span>
 
           <nav className="flex items-center gap-1">
             {[
               { to: '/', label: 'Dashboard' },
+              { to: '/position-management', label: 'Positions' },
               { to: '/settings', label: 'Settings' },
             ].map(({ to, label }) => (
               <NavLink
