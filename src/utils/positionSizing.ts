@@ -91,8 +91,9 @@ function capAndRedistribute(weights: number[], targetExposure: number, maxPositi
 }
 
 export function calculatePositionSizing(holdings: HoldingRecord[], strategy: PositionStrategy): SizingResult {
-  const totalValue = holdings.reduce((sum, holding) => sum + holding.marketValue, 0)
-  const active = holdings.map((holding) => ({
+  const stockHoldings = holdings.filter((holding) => holding.type === 'stock')
+  const totalValue = stockHoldings.reduce((sum, holding) => sum + holding.marketValue, 0)
+  const active = stockHoldings.map((holding) => ({
     holding,
     key: holdingKey(holding),
     assumption: strategy.assumptions[holdingKey(holding)] ?? null,
@@ -122,7 +123,7 @@ export function calculatePositionSizing(holdings: HoldingRecord[], strategy: Pos
     targetWeight: finalWeights[index],
   }]))
 
-  const rows = holdings.map((holding) => {
+  const rows = stockHoldings.map((holding) => {
     const key = holdingKey(holding)
     const calculated = byKey.get(key)
     const currentWeight = totalValue > 0 ? holding.marketValue / totalValue : 0

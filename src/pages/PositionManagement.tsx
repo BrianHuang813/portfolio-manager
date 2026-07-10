@@ -87,7 +87,7 @@ export function PositionManagement() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-px bg-[#252525]">
           {[
-            { label: 'Portfolio value', value: usd.format(result.totalValue), color: 'text-primary' },
+            { label: 'Stock portfolio value', value: usd.format(result.totalValue), color: 'text-primary' },
             { label: 'Unmodeled positions', value: String(unconfigured), color: unconfigured ? 'text-loss' : 'text-gain' },
             { label: 'Cash reserve', value: pct.format(Math.max(0, 1 - strategy.targetExposure)), color: 'text-primary' },
           ].map((stat) => (

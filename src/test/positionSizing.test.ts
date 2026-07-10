@@ -33,4 +33,13 @@ describe('position sizing', () => {
     const bySymbol = Object.fromEntries(result.rows.map((row) => [row.holding.symbol, row.targetWeight]))
     expect(bySymbol.C).toBeGreaterThan(bySymbol.A)
   })
+
+  it('excludes crypto from the stock position model', () => {
+    const strategy = defaultPositionStrategy()
+    strategy.assumptions = { 'stock:A': assumption }
+    const crypto = { ...holding('BTC', 900), type: 'crypto' as const, platform: 'okx' as const }
+    const result = calculatePositionSizing([holding('A', 100), crypto], strategy)
+    expect(result.totalValue).toBe(100)
+    expect(result.rows.map((row) => row.holding.symbol)).toEqual(['A'])
+  })
 })
