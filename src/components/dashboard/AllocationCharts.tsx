@@ -40,21 +40,21 @@ function CustomLabel({ cx, cy, midAngle, outerRadius, name, percent }: {
 }
 
 export function AllocationCharts({ holdings }: Props) {
-  const typeData = useMemo(() => {
+  const allocationBySymbol = (assetType?: HoldingRecord['type']) => {
     const t: Record<string, number> = {}
-    holdings.forEach((h) => { t[h.type] = (t[h.type] ?? 0) + h.marketValue })
-    return Object.entries(t).map(([name, value]) => ({ name, value }))
-  }, [holdings])
-
-  const symbolData = useMemo(() => {
-    const t: Record<string, number> = {}
-    holdings.forEach((h) => { t[h.symbol] = (t[h.symbol] ?? 0) + h.marketValue })
+    holdings
+      .filter((h) => !assetType || h.type === assetType)
+      .forEach((h) => { t[h.symbol] = (t[h.symbol] ?? 0) + h.marketValue })
     const sorted = Object.entries(t).sort(([, a], [, b]) => b - a)
     const top = sorted.slice(0, 9).map(([name, value]) => ({ name, value }))
     const rest = sorted.slice(9).reduce((s, [, v]) => s + v, 0)
     if (rest > 0) top.push({ name: 'Other', value: rest })
     return top
-  }, [holdings])
+  }
+
+  const stockData = useMemo(() => allocationBySymbol('stock'), [holdings])
+  const cryptoData = useMemo(() => allocationBySymbol('crypto'), [holdings])
+  const totalData = useMemo(() => allocationBySymbol(), [holdings])
 
   if (holdings.length === 0) return null
 
@@ -68,46 +68,16 @@ export function AllocationCharts({ holdings }: Props) {
     padding: '8px 12px',
   }
 
-  return (
-    <div className="space-y-6">
-      {/* ── Chart A: type split ── */}
-      <div>
-        <p className="font-body text-label-sm text-muted uppercase tracking-[0.1em] mb-4">
-          Asset Type
-        </p>
-        <ResponsiveContainer width="100%" height={180}>
-          <PieChart>
-            <Pie
-              data={typeData}
-              cx="50%" cy="50%"
-              innerRadius={50} outerRadius={70}
-              dataKey="value"
-              strokeWidth={0}
-              label={(p) => <CustomLabel {...p} />}
-              labelLine={false}
-            >
-              {typeData.map((_, i) => (
-                <Cell key={i} fill={PALETTE[i % PALETTE.length]!} />
-              ))}
-            </Pie>
-            <Tooltip
-              formatter={(v: number) => [USD.format(v), '']}
-              contentStyle={tooltipStyle}
-              itemStyle={{ color: '#4bdfa4' }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* ── Chart B: top symbols ── */}
-      <div>
-        <p className="font-body text-label-sm text-muted uppercase tracking-[0.1em] mb-4">
-          Top Holdings
-        </p>
+  const AllocationPie = ({ title, data }: { title: string; data: { name: string; value: number }[] }) => (
+    <div>
+      <p className="font-body text-label-sm text-muted uppercase tracking-[0.1em] mb-4">
+        {title}
+      </p>
+      {data.length > 0 ? (
         <ResponsiveContainer width="100%" height={200}>
           <PieChart>
             <Pie
-              data={symbolData}
+              data={data}
               cx="50%" cy="50%"
               innerRadius={55} outerRadius={75}
               dataKey="value"
@@ -115,7 +85,7 @@ export function AllocationCharts({ holdings }: Props) {
               label={(p) => <CustomLabel {...p} />}
               labelLine={false}
             >
-              {symbolData.map((_, i) => (
+              {data.map((_, i) => (
                 <Cell key={i} fill={PALETTE[i % PALETTE.length]!} />
               ))}
             </Pie>
@@ -126,7 +96,19 @@ export function AllocationCharts({ holdings }: Props) {
             />
           </PieChart>
         </ResponsiveContainer>
-      </div>
+      ) : (
+        <div className="flex h-[200px] items-center justify-center bg-cll font-body text-label-sm text-muted">
+          No positions
+        </div>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="space-y-8">
+      <AllocationPie title="Stock Allocation" data={stockData} />
+      <AllocationPie title="Crypto Allocation" data={cryptoData} />
+      <AllocationPie title="All Asset Allocation" data={totalData} />
     </div>
   )
 }

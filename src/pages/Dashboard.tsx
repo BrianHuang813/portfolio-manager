@@ -111,6 +111,7 @@ export function Dashboard() {
               <div className="space-y-4">
                 <div className="skeleton h-40 w-full" />
                 <div className="skeleton h-40 w-full" />
+                <div className="skeleton h-40 w-full" />
               </div>
             ) : (
               <AllocationCharts holdings={holdings} />

@@ -167,6 +167,14 @@ export async function fetchOKXHoldings(): Promise<HoldingRecord[]> {
         const alias: Record<string, string> = { OKSOL: 'SOL', BETH: 'ETH' }
         const baseCcy = alias[d.ccy] ?? d.ccy
         const instId = `${baseCcy}-USDT`
+        // Stablecoins are already USD-denominated; no market lookup is needed.
+        // This is especially important for USDT/USDC held only in Funding or
+        // Simple Earn, where OKX returns eqUsd=0 and there is no stablecoin-USDT ticker.
+        if (d.ccy.toUpperCase() === 'USDT' || d.ccy.toUpperCase() === 'USDC') {
+          d.eqUsd = d.eq
+          console.log(`[OKX] stablecoin valuation ${d.ccy}: $${d.eqUsd}`)
+          return
+        }
         try {
           const r = await fetch(`${OKX_BASE}/api/v5/market/ticker?instId=${instId}`)
           if (!r.ok) return
