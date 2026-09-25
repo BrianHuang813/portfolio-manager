@@ -18,6 +18,7 @@ export const STORAGE_KEYS = {
   okx: 'cfg_okx',
   zerion: 'cfg_zerion',
   finnhub: 'cfg_finnhub',
+  futu: 'cfg_futu',
   gsheets: 'cfg_gsheets',
   snapshotHistory: 'snapshot_history',
   holdingsCache: 'holdings_cache',

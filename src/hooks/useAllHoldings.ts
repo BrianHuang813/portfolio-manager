@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react'
 import { fetchSchwabHoldings } from '../services/schwab'
 import { fetchOKXHoldings } from '../services/okx'
 import { fetchZerionHoldings } from '../services/zerion'
-import { fetchFutuHoldings } from '../services/futu'
+import { fetchFutuHoldings, FUTU_NOT_CONFIGURED } from '../services/futu'
 import { fetchBitcoinHoldings } from '../services/bitcoin'
 import { saveSnapshot } from '../utils/snapshot'
 import { loadCachedHoldings, saveCachedHoldings } from '../utils/holdingsCache'
@@ -64,7 +64,7 @@ async function fetchAllHoldings(): Promise<FetchResult> {
   if (futuResult.status === 'fulfilled') {
     futuWarning = futuResult.value.warning
     const fetchFailure = futuWarning !== null
-      && !futuWarning.startsWith('Google Sheets not configured')
+      && !futuWarning.startsWith(FUTU_NOT_CONFIGURED)
       ? futuWarning
       : null
 

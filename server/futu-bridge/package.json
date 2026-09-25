@@ -1,0 +1,15 @@
+{
+  "name": "futu-bridge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Read-only HTTPS bridge exposing Futu OpenD US positions to the portfolio dashboard",
+  "type": "module",
+  "main": "index.js",
+  "engines": { "node": ">=22.12" },
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "futu-api": "10.11.7108"
+  }
+}

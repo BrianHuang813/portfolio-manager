@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeSchwab, normalizeOKX, normalizeZerion, normalizeFutu } from '../utils/normalize'
+import { normalizeSchwab, normalizeOKX, normalizeZerion, normalizeFutu, normalizeFutuPosition } from '../utils/normalize'
 import type { SchwabPosition, OKXDetail, ZerionPosition } from '../utils/normalize'
 
 describe('normalizeSchwab', () => {
@@ -94,5 +94,30 @@ describe('normalizeFutu', () => {
 
   it('throws for rows with fewer than 11 columns', () => {
     expect(() => normalizeFutu(['AAPL', 'Apple', '10'])).toThrow()
+  })
+})
+
+describe('normalizeFutuPosition', () => {
+  it('maps an OpenD US position', () => {
+    const result = normalizeFutuPosition({
+      code: 'NVDA', name: 'NVIDIA', qty: 10, val: 1500, plVal: 300, dilutedCostPrice: 120, secMarket: 2,
+    })
+    expect(result.symbol).toBe('NVDA')
+    expect(result.qty).toBe(10)
+    expect(result.costBasis).toBe(120)
+    expect(result.marketValue).toBe(1500)
+    expect(result.unrealizedPL).toBe(300)
+    expect(result.unrealizedPLPercent).toBeCloseTo(25) // 300 / (1500 - 300)
+    expect(result.platform).toBe('futu')
+    expect(result.type).toBe('stock')
+  })
+
+  it('strips a US. prefix and falls back when diluted cost is missing', () => {
+    const result = normalizeFutuPosition({
+      code: 'US.AAPL', name: 'Apple', qty: 1, val: 200, plVal: 0, dilutedCostPrice: 0, averageCostPrice: 190,
+    })
+    expect(result.symbol).toBe('AAPL')
+    expect(result.costBasis).toBe(190)
+    expect(result.unrealizedPLPercent).toBe(0)
   })
 })

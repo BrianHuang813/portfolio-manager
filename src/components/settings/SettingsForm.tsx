@@ -14,6 +14,7 @@ export function SettingsForm() {
   const [okx,      setOkx]      = useState({ apiKey: '', secret: '', passphrase: '' })
   const [zerion,   setZerion]   = useState({ apiKey: '', walletAddresses: '' })
   const [finnhub,  setFinnhub]  = useState({ apiKey: '' })
+  const [futu,     setFutu]     = useState({ bridgeUrl: '', token: '' })
   const [gsheets,  setGsheets]  = useState({ spreadsheetId: '', sheetsApiKey: '' })
   const [saved, setSaved] = useState<Record<string, boolean>>({})
 
@@ -26,6 +27,8 @@ export function SettingsForm() {
     if (z) { setZerion(z); setSaved((p) => ({ ...p, zerion: true })) }
     const f = getConfig<typeof finnhub>(STORAGE_KEYS.finnhub)
     if (f) { setFinnhub(f); setSaved((p) => ({ ...p, finnhub: true })) }
+    const fu = getConfig<typeof futu>(STORAGE_KEYS.futu)
+    if (fu) { setFutu(fu); setSaved((p) => ({ ...p, futu: true })) }
     const g = getConfig<typeof gsheets>(STORAGE_KEYS.gsheets)
     if (g) { setGsheets(g); setSaved((p) => ({ ...p, gsheets: true })) }
   }, [])
@@ -105,7 +108,18 @@ export function SettingsForm() {
       />
 
       <PlatformSection
-        title="Google Sheets (Futu)" tag="GSH" saved={saved.gsheets ?? false}
+        title="Futu (US, via futu-bridge)" tag="FUTU" saved={saved.futu ?? false}
+        fields={[
+          { key: 'bridgeUrl', label: 'Bridge URL',   placeholder: 'https://1-2-3-4.sslip.io' },
+          { key: 'token',     label: 'Bridge Token', type: 'password', placeholder: 'BRIDGE_TOKEN on the VM' },
+        ]}
+        values={futu}
+        onChange={(k, v) => setFutu((s) => ({ ...s, [k]: v }))}
+        onSave={() => save(STORAGE_KEYS.futu, futu, 'futu')}
+      />
+
+      <PlatformSection
+        title="Google Sheets (Futu, legacy)" tag="GSH" saved={saved.gsheets ?? false}
         fields={[
           { key: 'spreadsheetId', label: 'Spreadsheet ID',      placeholder: '/d/{SPREADSHEET_ID}/edit' },
           { key: 'sheetsApiKey',  label: 'Sheets API Key',      type: 'password', placeholder: 'optional if sheet is public' },

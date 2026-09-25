@@ -141,3 +141,40 @@ export function normalizeFutu(row: string[]): HoldingRecord {
     lastUpdated: lastUpdated ?? new Date().toISOString(),
   }
 }
+
+// ─── Futu (futu-bridge /positions, US market) ──────────────────────────────
+
+/** Subset of OpenD's Trd_Common.Position, as served by server/futu-bridge */
+export interface FutuPosition {
+  positionID?: string
+  code: string                // "AAPL" (raw proto) or "US.AAPL"
+  name: string
+  qty: number
+  val: number                 // market value, USD for US positions
+  plVal: number
+  dilutedCostPrice?: number
+  averageCostPrice?: number
+  costPrice?: number
+  secMarket?: number          // Trd_Common.TrdSecMarket, 2 = US
+}
+
+// A cost price of 0 means "not provided" in OpenD, so fall back with || rather than ??
+export function normalizeFutuPosition(pos: FutuPosition): HoldingRecord {
+  const marketValue = pos.val
+  const unrealizedPL = pos.plVal
+  const cost = marketValue - unrealizedPL
+  const unrealizedPLPercent = cost !== 0 ? (unrealizedPL / Math.abs(cost)) * 100 : 0
+
+  return {
+    symbol: pos.code.replace(/^US./, ''),
+    name: pos.name,
+    qty: pos.qty,
+    costBasis: pos.dilutedCostPrice || pos.averageCostPrice || pos.costPrice || 0,
+    marketValue,
+    unrealizedPL,
+    unrealizedPLPercent,
+    platform: 'futu',
+    type: 'stock',
+    lastUpdated: new Date().toISOString(),
+  }
+}

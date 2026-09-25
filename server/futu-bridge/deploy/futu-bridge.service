@@ -1,0 +1,16 @@
+[Unit]
+Description=futu-bridge (read-only Futu positions API)
+After=network-online.target opend.service
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/futu-bridge
+EnvironmentFile=/etc/futu-bridge.env
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

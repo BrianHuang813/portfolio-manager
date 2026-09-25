@@ -2,7 +2,7 @@
 
 Personal investment dashboard — React + Vite SPA deployed to GitHub Pages.
 
-Aggregates holdings from **Charles Schwab**, **OKX**, **Zerion** (self-custody wallets), and **Futu/Moomoo** (via Google Sheets) into a single real-time dashboard with charts, PnL tracking, and news.
+Aggregates holdings from **Charles Schwab**, **OKX**, **Zerion** (self-custody wallets), and **Futu/Moomoo** (US stocks via OpenD + futu-bridge) into a single real-time dashboard with charts, PnL tracking, and news.
 
 ---
 
@@ -57,9 +57,16 @@ Navigate to **Settings** in the app. Enter API credentials for each platform —
 1. Get an API key from [developers.zerion.io](https://developers.zerion.io/)
 2. Paste your `apiKey` and wallet addresses (comma-separated) into Settings → Zerion
 
-### Futu / Moomoo (via Google Sheets)
+### Futu / Moomoo (US stocks via futu-bridge)
 
-Futu's OpenD gateway cannot be called from the browser. Use a Python script to write positions to Google Sheets using the schema below.
+Futu has no cloud REST API — every query goes through **OpenD**, a gateway that must stay running and logged in to your Futu account. OpenD cannot run on Vercel, so it lives on an always-on VM together with [`server/futu-bridge`](server/futu-bridge/README.md), a small read-only HTTPS service that returns your **US-market** positions (already in USD).
+
+1. Deploy OpenD + futu-bridge by following [server/futu-bridge/README.md](server/futu-bridge/README.md) (Oracle Cloud Always Free VM)
+2. In Settings → Futu, enter the bridge URL (e.g. `https://140-238-1-2.sslip.io`) and the `BRIDGE_TOKEN`
+
+#### Legacy: Google Sheets
+
+Only used when the futu-bridge settings are empty. Use a Python script to write positions to Google Sheets using the schema below.
 
 **Required sheet tab name:** `Futu`
 

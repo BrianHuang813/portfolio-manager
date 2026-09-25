@@ -1,0 +1,5 @@
+# /etc/caddy/Caddyfile — replace the host with your VM's public IP in sslip.io form
+# (e.g. 140.238.1.2 → 140-238-1-2.sslip.io). Caddy obtains the HTTPS certificate automatically.
+140-238-1-2.sslip.io {
+	reverse_proxy 127.0.0.1:8787
+}

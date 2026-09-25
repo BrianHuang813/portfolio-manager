@@ -1,10 +1,18 @@
-// Spec: F2.4 — Futu data via Google Sheets (read-only)
-// Sheet must be publicly readable or use a Sheets API key
+// Spec: F2.4 — Futu holdings
+// Primary: US positions from futu-bridge (server/futu-bridge), a read-only HTTPS service
+// running next to OpenD on an always-on VM. Futu has no cloud API; OpenD is the only gateway.
+// Fallback: the legacy Google Sheets tab, used only when the bridge is not configured.
 
 import { getConfig } from '../utils/storage'
-import { normalizeFutu } from '../utils/normalize'
+import { normalizeFutu, normalizeFutuPosition } from '../utils/normalize'
+import type { FutuPosition } from '../utils/normalize'
 import { STORAGE_KEYS } from '../config/constants'
 import type { HoldingRecord } from '../types/holdings'
+
+interface FutuBridgeConfig {
+  bridgeUrl: string
+  token: string
+}
 
 interface GSheetsConfig {
   spreadsheetId: string
@@ -16,13 +24,46 @@ export interface FutuFetchResult {
   warning: string | null
 }
 
-export async function fetchFutuHoldings(): Promise<FutuFetchResult> {
-  const cfg = getConfig<GSheetsConfig>(STORAGE_KEYS.gsheets)
+export const FUTU_NOT_CONFIGURED = 'Futu not configured'
 
-  if (!cfg?.spreadsheetId) {
-    return { holdings: [], warning: 'Google Sheets not configured — add spreadsheetId in Settings.' }
+export async function fetchFutuHoldings(): Promise<FutuFetchResult> {
+  const bridge = getConfig<FutuBridgeConfig>(STORAGE_KEYS.futu)
+  if (bridge?.bridgeUrl && bridge.token) return fetchFromBridge(bridge)
+
+  const sheets = getConfig<GSheetsConfig>(STORAGE_KEYS.gsheets)
+  if (sheets?.spreadsheetId) return fetchFromSheets(sheets)
+
+  return { holdings: [], warning: `${FUTU_NOT_CONFIGURED} — add your futu-bridge URL and token in Settings.` }
+}
+
+// ─── futu-bridge ───────────────────────────────────────────────────────────
+
+async function fetchFromBridge(cfg: FutuBridgeConfig): Promise<FutuFetchResult> {
+  const url = `${cfg.bridgeUrl.replace(/\/+$/, '')}/positions`
+
+  let res: Response
+  try {
+    res = await fetch(url, { headers: { Authorization: `Bearer ${cfg.token}` } })
+  } catch (e) {
+    return { holdings: [], warning: `Futu: cannot reach futu-bridge — ${String(e)}` }
   }
 
+  if (!res.ok) {
+    const detail = await res.json().then((d: { error?: string }) => d.error).catch(() => null)
+    const hint = res.status === 401 ? 'check the bridge token in Settings' : detail ?? res.statusText
+    return { holdings: [], warning: `Futu: futu-bridge error ${res.status} — ${hint}` }
+  }
+
+  const data = await res.json() as { positions: FutuPosition[]; updatedAt: string }
+  return {
+    holdings: data.positions.map((p) => ({ ...normalizeFutuPosition(p), lastUpdated: data.updatedAt })),
+    warning: null,
+  }
+}
+
+// ─── Google Sheets (legacy) ────────────────────────────────────────────────
+
+async function fetchFromSheets(cfg: GSheetsConfig): Promise<FutuFetchResult> {
   // Accept either a bare ID or a full Google Sheets URL
   const idMatch = cfg.spreadsheetId.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/)
   const spreadsheetId = idMatch ? idMatch[1] : cfg.spreadsheetId

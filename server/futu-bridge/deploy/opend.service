@@ -1,0 +1,19 @@
+[Unit]
+Description=Futu OpenD gateway
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=ubuntu
+WorkingDirectory=/opt/futu-opend
+# Credentials are remembered by the first interactive login (./FutuOpenD, answer "remember password")
+# OpenD's console redraws its ">>>" prompt forever once stdin hits EOF, so feed it a stdin that never
+# closes and drop the console output. OpenD still writes its own logs to ~/.com.futunn.FutuOpenD/Log,
+# and operation commands (verification codes) go through telnet 127.0.0.1:22222.
+ExecStart=/bin/sh -c 'tail -f /dev/null | exec /opt/futu-opend/FutuOpenD -login_account=YOUR_FUTU_ID -login_by_remember=1'
+StandardOutput=null
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
