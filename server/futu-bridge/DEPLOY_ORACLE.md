@@ -28,6 +28,7 @@ Oracle VM ── Caddy :443 ──> futu-bridge 127.0.0.1:8787 ──> OpenD 127
 | 10. 安裝 Caddy（HTTPS） | VM |
 | 11. 設定 dashboard | 瀏覽器 |
 | 12. 避免 VM 被 Oracle 回收 | Oracle 主控台 |
+| 13. 設定斷線通知（UptimeRobot） | 瀏覽器 |
 
 ---
 
@@ -503,11 +504,45 @@ Oracle 會**回收閒置的 Always Free VM**：7 天內 CPU、網路使用率都
 
 ---
 
+## 13. 設定斷線通知（UptimeRobot，免費）
+
+`/health` 不只檢查 bridge 有沒有在跑，也會連進 OpenD 確認它**有登入交易伺服器**：
+
+| 狀態 | 回傳 |
+|---|---|
+| 一切正常 | `200 {"ok":true}` |
+| OpenD 沒在跑、key 錯誤、或登出（例如需要驗證碼） | `503 {"ok":false,"error":"..."}` |
+
+這個 endpoint 不需要 token，也不含任何持倉資料。結果會快取 60 秒，所以別人一直打它也不會造成 OpenD 負擔。用免費的監控服務定時檢查它，OpenD 一斷線就會寄信通知你。
+
+1. 到 <https://uptimerobot.com> 註冊免費帳號（Free plan：50 個 monitor，每 5 分鐘檢查一次）
+2. 點 **+ New monitor**（或 **Add New Monitor**）
+3. 填寫：
+   - **Monitor type**：`HTTP / website monitoring`（舊版介面叫 `HTTP(s)`）
+   - **URL to monitor**：`https://<你的IP，點換成橫線>.sslip.io/health`
+   - **Friendly name**：`Futu OpenD`
+   - **Monitor interval**：`5 minutes`（免費版最短）
+   - **How will we notify you?**：勾你的 email。想要手機推播的話，再裝 UptimeRobot App 並勾選
+4. **Create monitor**
+5. 幾分鐘後狀態應該會顯示 **Up**（綠色）
+
+收到 **Down** 通知時：
+
+1. 用瀏覽器打開 `https://<ip>.sslip.io/health`，看 `error` 的內容
+2. 依照內容處理：
+   - `not logged in` / `verification code`：照 8-6 步用 telnet 輸入驗證碼
+   - `cannot reach OpenD`：`sudo systemctl restart opend`，然後看 OpenD 的 log
+   - 整個網址都打不開：VM 可能停機或被回收，到 Oracle 主控台看 Instance 狀態
+3. 修好之後 `/health` 最多 60 秒就會恢復 `{"ok":true}`，UptimeRobot 會再寄一封 **Up** 通知
+
+---
+
 ## 驗證清單
 
 - [ ] `ss -tlnp` 顯示 11111 / 33333 / 22222 / 8787 都只綁在 `127.0.0.1`
 - [ ] `systemctl is-active opend futu-bridge caddy` 三個都是 `active`
 - [ ] 從外部 `curl https://<ip>.sslip.io/health` 回傳 `{"ok":true}`
+- [ ] UptimeRobot 的 monitor 顯示 **Up**
 - [ ] 從外部 `curl https://<ip>.sslip.io/positions` 不帶 token 時回傳 401
 - [ ] dashboard 顯示 Futu 持倉
 - [ ] `sudo reboot` 之後以上項目全部自動恢復

@@ -10,7 +10,7 @@ Browser (dashboard) ──HTTPS + Bearer token──> Caddy :443 ──> futu-br
 ```
 
 - OpenD's ports stay bound to `127.0.0.1`; only Caddy (80/443) is public.
-- The bridge exposes one endpoint, `GET /positions`. It never places orders, and it never unlocks trading.
+- The bridge exposes `GET /positions` (token required) and `GET /health` (public; checks that OpenD is logged in, for uptime monitors). It never places orders, and it never unlocks trading.
 - Results are cached for 30 s, so repeated dashboard refreshes don't hit OpenD every time.
 
 ## Deploy

@@ -56,6 +56,17 @@ function toPlain(p) {
   }
 }
 
+/** Throws unless OpenD is reachable and logged in to Futu's trading server */
+export async function checkOpenD(opendConfig) {
+  await withOpenD(opendConfig, async (ws) => {
+    const res = await ws.GetGlobalState({ c2s: { userID: 0 } })
+      .catch((e) => { throw new Error(`GetGlobalState failed: ${describeError(e)}`) })
+    if (!res.s2c?.trdLogined) {
+      throw new Error('OpenD is not logged in to the trading server — it may need a verification code')
+    }
+  })
+}
+
 export async function fetchUsPositions(opendConfig) {
   return withOpenD(opendConfig, async (ws) => {
     const accRes = await ws.GetAccList({ c2s: { userID: 0, needGeneralSecAccount: true } })
