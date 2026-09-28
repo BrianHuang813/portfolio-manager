@@ -20,6 +20,8 @@ export const STORAGE_KEYS = {
   finnhub: 'cfg_finnhub',
   futu: 'cfg_futu',
   gsheets: 'cfg_gsheets',
+  manualHoldings: 'cfg_manual_holdings',
+  manualLastPrices: 'manual_last_prices',
   snapshotHistory: 'snapshot_history',
   holdingsCache: 'holdings_cache',
   positionStrategy: 'position_strategy',

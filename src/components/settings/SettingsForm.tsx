@@ -15,6 +15,7 @@ export function SettingsForm() {
   const [zerion,   setZerion]   = useState({ apiKey: '', walletAddresses: '' })
   const [finnhub,  setFinnhub]  = useState({ apiKey: '' })
   const [futu,     setFutu]     = useState({ bridgeUrl: '', token: '' })
+  const [manual,   setManual]   = useState({ holdings: '' })
   const [gsheets,  setGsheets]  = useState({ spreadsheetId: '', sheetsApiKey: '' })
   const [saved, setSaved] = useState<Record<string, boolean>>({})
 
@@ -29,6 +30,8 @@ export function SettingsForm() {
     if (f) { setFinnhub(f); setSaved((p) => ({ ...p, finnhub: true })) }
     const fu = getConfig<typeof futu>(STORAGE_KEYS.futu)
     if (fu) { setFutu(fu); setSaved((p) => ({ ...p, futu: true })) }
+    const m = getConfig<typeof manual>(STORAGE_KEYS.manualHoldings)
+    if (m) { setManual(m); setSaved((p) => ({ ...p, manual: true })) }
     const g = getConfig<typeof gsheets>(STORAGE_KEYS.gsheets)
     if (g) { setGsheets(g); setSaved((p) => ({ ...p, gsheets: true })) }
   }, [])
@@ -116,6 +119,16 @@ export function SettingsForm() {
         values={futu}
         onChange={(k, v) => setFutu((s) => ({ ...s, [k]: v }))}
         onSave={() => save(STORAGE_KEYS.futu, futu, 'futu')}
+      />
+
+      <PlatformSection
+        title="Manual Holdings" tag="MAN" saved={saved.manual ?? false}
+        fields={[
+          { key: 'holdings', label: 'Holdings (SYMBOL:qty@cost, comma-separated; priced via Finnhub)', placeholder: 'TSLA:13@207.9' },
+        ]}
+        values={manual}
+        onChange={(k, v) => setManual((s) => ({ ...s, [k]: v }))}
+        onSave={() => save(STORAGE_KEYS.manualHoldings, manual, 'manual')}
       />
 
       <PlatformSection

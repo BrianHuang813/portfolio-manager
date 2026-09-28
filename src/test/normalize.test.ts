@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { normalizeSchwab, normalizeOKX, normalizeZerion, normalizeFutu, normalizeFutuPosition } from '../utils/normalize'
 import type { SchwabPosition, OKXDetail, ZerionPosition } from '../utils/normalize'
+import { parseManualHoldings, toManualHoldingRecord } from '../services/manual'
 
 describe('normalizeSchwab', () => {
   it('maps a long position correctly', () => {
@@ -119,5 +120,23 @@ describe('normalizeFutuPosition', () => {
     expect(result.symbol).toBe('AAPL')
     expect(result.costBasis).toBe(190)
     expect(result.unrealizedPLPercent).toBe(0)
+  })
+})
+
+describe('manual holdings', () => {
+  it('parses SYMBOL:qty@cost entries and skips malformed ones', () => {
+    expect(parseManualHoldings(' tsla:13@207.9, NVDA:5 @ 120 , junk, AAPL:0@100')).toEqual([
+      { symbol: 'TSLA', qty: 13, costBasis: 207.9 },
+      { symbol: 'NVDA', qty: 5, costBasis: 120 },
+    ])
+  })
+
+  it('values a manual holding at the given price', () => {
+    const r = toManualHoldingRecord({ symbol: 'TSLA', qty: 13, costBasis: 207.9 }, 372.11)
+    expect(r.marketValue).toBeCloseTo(4837.43)
+    expect(r.unrealizedPL).toBeCloseTo(2134.73)
+    expect(r.unrealizedPLPercent).toBeCloseTo(78.985, 2)
+    expect(r.platform).toBe('futu')
+    expect(r.type).toBe('stock')
   })
 })

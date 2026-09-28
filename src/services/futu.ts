@@ -8,6 +8,7 @@ import { normalizeFutu, normalizeFutuPosition } from '../utils/normalize'
 import type { FutuPosition } from '../utils/normalize'
 import { STORAGE_KEYS } from '../config/constants'
 import type { HoldingRecord } from '../types/holdings'
+import { fetchManualHoldings } from './manual'
 
 interface FutuBridgeConfig {
   bridgeUrl: string
@@ -26,7 +27,13 @@ export interface FutuFetchResult {
 
 export const FUTU_NOT_CONFIGURED = 'Futu not configured'
 
+// Manual holdings are grouped with Futu, as they were in the old Google Sheet
 export async function fetchFutuHoldings(): Promise<FutuFetchResult> {
+  const [result, manual] = await Promise.all([fetchFutuSource(), fetchManualHoldings()])
+  return { ...result, holdings: [...result.holdings, ...manual] }
+}
+
+async function fetchFutuSource(): Promise<FutuFetchResult> {
   const bridge = getConfig<FutuBridgeConfig>(STORAGE_KEYS.futu)
   if (bridge?.bridgeUrl && bridge.token) return fetchFromBridge(bridge)
 
