@@ -119,29 +119,6 @@ export function normalizeZerion(pos: ZerionPosition, walletAddress: string): Hol
   }
 }
 
-// ─── Futu (Google Sheets row) ──────────────────────────────────────────────
-
-/** Columns A–K as defined in Futu Sheet Schema (spec F2.4) */
-export function normalizeFutu(row: string[]): HoldingRecord {
-  if (row.length < 11) {
-    throw new Error(`Futu row has ${row.length} columns, expected 11: ${JSON.stringify(row)}`)
-  }
-  const [symbol, name, qty, costBasis, marketValue, unrealizedPL, unrealizedPLPercent, , type, lastUpdated] = row
-
-  return {
-    symbol: symbol ?? '',
-    name: name ?? '',
-    qty: parseFloat(qty ?? '0') || 0,
-    costBasis: parseFloat(costBasis ?? '0') || 0,
-    marketValue: parseFloat(marketValue ?? '0') || 0,
-    unrealizedPL: parseFloat(unrealizedPL ?? '0') || 0,
-    unrealizedPLPercent: parseFloat(unrealizedPLPercent ?? '0') || 0,
-    platform: 'futu',
-    type: (type === 'crypto' ? 'crypto' : 'stock'),
-    lastUpdated: lastUpdated ?? new Date().toISOString(),
-  }
-}
-
 // ─── Futu (futu-bridge /positions, US market) ──────────────────────────────
 
 /** Subset of OpenD's Trd_Common.Position, as served by server/futu-bridge */

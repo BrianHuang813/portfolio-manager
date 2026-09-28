@@ -16,7 +16,6 @@ export function SettingsForm() {
   const [finnhub,  setFinnhub]  = useState({ apiKey: '' })
   const [futu,     setFutu]     = useState({ bridgeUrl: '', token: '' })
   const [manual,   setManual]   = useState({ holdings: '' })
-  const [gsheets,  setGsheets]  = useState({ spreadsheetId: '', sheetsApiKey: '' })
   const [saved, setSaved] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
@@ -32,8 +31,6 @@ export function SettingsForm() {
     if (fu) { setFutu(fu); setSaved((p) => ({ ...p, futu: true })) }
     const m = getConfig<typeof manual>(STORAGE_KEYS.manualHoldings)
     if (m) { setManual(m); setSaved((p) => ({ ...p, manual: true })) }
-    const g = getConfig<typeof gsheets>(STORAGE_KEYS.gsheets)
-    if (g) { setGsheets(g); setSaved((p) => ({ ...p, gsheets: true })) }
   }, [])
 
   const flash = (message: string, ok = true) => {
@@ -129,17 +126,6 @@ export function SettingsForm() {
         values={manual}
         onChange={(k, v) => setManual((s) => ({ ...s, [k]: v }))}
         onSave={() => save(STORAGE_KEYS.manualHoldings, manual, 'manual')}
-      />
-
-      <PlatformSection
-        title="Google Sheets (Futu, legacy)" tag="GSH" saved={saved.gsheets ?? false}
-        fields={[
-          { key: 'spreadsheetId', label: 'Spreadsheet ID',      placeholder: '/d/{SPREADSHEET_ID}/edit' },
-          { key: 'sheetsApiKey',  label: 'Sheets API Key',      type: 'password', placeholder: 'optional if sheet is public' },
-        ]}
-        values={gsheets}
-        onChange={(k, v) => setGsheets((s) => ({ ...s, [k]: v }))}
-        onSave={() => save(STORAGE_KEYS.gsheets, gsheets, 'gsheets')}
       />
 
       {/* Security note */}

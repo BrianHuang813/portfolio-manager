@@ -19,7 +19,6 @@ export const STORAGE_KEYS = {
   zerion: 'cfg_zerion',
   finnhub: 'cfg_finnhub',
   futu: 'cfg_futu',
-  gsheets: 'cfg_gsheets',
   manualHoldings: 'cfg_manual_holdings',
   manualLastPrices: 'manual_last_prices',
   snapshotHistory: 'snapshot_history',

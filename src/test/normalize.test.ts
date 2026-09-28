@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeSchwab, normalizeOKX, normalizeZerion, normalizeFutu, normalizeFutuPosition } from '../utils/normalize'
+import { normalizeSchwab, normalizeOKX, normalizeZerion, normalizeFutuPosition } from '../utils/normalize'
 import type { SchwabPosition, OKXDetail, ZerionPosition } from '../utils/normalize'
 import { parseManualHoldings, toManualHoldingRecord } from '../services/manual'
 
@@ -75,26 +75,6 @@ describe('normalizeZerion', () => {
     expect(result.marketValue).toBe(1000)
     expect(result.platform).toBe('zerion')
     expect(result.sourceWallet).toBe('0xabc1...f456')
-  })
-})
-
-describe('normalizeFutu', () => {
-  it('parses a valid 11-column row', () => {
-    const row = ['700.HK', 'Tencent', '100', '45.2', '4890', '370', '8.18', 'futu', 'stock', '2026-04-05T10:00:00Z', 'USD']
-    const result = normalizeFutu(row)
-    expect(result.symbol).toBe('700.HK')
-    expect(result.name).toBe('Tencent')
-    expect(result.qty).toBe(100)
-    expect(result.costBasis).toBe(45.2)
-    expect(result.marketValue).toBe(4890)
-    expect(result.unrealizedPL).toBe(370)
-    expect(result.unrealizedPLPercent).toBe(8.18)
-    expect(result.platform).toBe('futu')
-    expect(result.type).toBe('stock')
-  })
-
-  it('throws for rows with fewer than 11 columns', () => {
-    expect(() => normalizeFutu(['AAPL', 'Apple', '10'])).toThrow()
   })
 })
 

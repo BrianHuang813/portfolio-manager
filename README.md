@@ -64,32 +64,6 @@ Futu has no cloud REST API — every query goes through **OpenD**, a gateway tha
 1. Deploy OpenD + futu-bridge by following [server/futu-bridge/README.md](server/futu-bridge/README.md) (Oracle Cloud Always Free VM)
 2. In Settings → Futu, enter the bridge URL (e.g. `https://140-238-1-2.sslip.io`) and the `BRIDGE_TOKEN`
 
-#### Legacy: Google Sheets
-
-Only used when the futu-bridge settings are empty. Use a Python script to write positions to Google Sheets using the schema below.
-
-**Required sheet tab name:** `Futu`
-
-**Column schema (A–K):**
-
-| Col | Field | Type | Example |
-|-----|-------|------|---------|
-| A | `symbol` | string | `700.HK` |
-| B | `name` | string | `Tencent Holdings` |
-| C | `qty` | number | `100` |
-| D | `costBasis` | number (USD/unit) | `45.20` |
-| E | `marketValue` | number (USD total) | `4890.00` |
-| F | `unrealizedPL` | number (USD) | `370.00` |
-| G | `unrealizedPLPercent` | number | `8.18` |
-| H | `platform` | string | `futu` |
-| I | `type` | string | `stock` |
-| J | `lastUpdated` | ISO 8601 | `2026-04-05T10:00:00Z` |
-| K | `currency` | string | `USD` |
-
-**Important:** Pre-convert all HKD/other currencies to USD in your Python script.
-
-Make the sheet either **publicly readable** or add a `sheetsApiKey` in Settings → Google Sheets.
-
 ### Finnhub (News)
 
 1. Get a free API key at [finnhub.io](https://finnhub.io/)

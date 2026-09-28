@@ -15,7 +15,6 @@ import { PerformanceChart } from '../components/dashboard/PerformanceChart'
 import { TableControls } from '../components/dashboard/TableControls'
 import { HoldingsTable } from '../components/dashboard/HoldingsTable'
 import { NewsPanel } from '../components/dashboard/NewsPanel'
-import { Button } from '../components/ui/Button'
 
 export function Dashboard() {
   const { holdings, isLoading, isFetching, snapshotRevision } = useAllHoldings()
@@ -72,19 +71,6 @@ export function Dashboard() {
                 <h2 className="font-display font-bold text-display-sm text-primary leading-none">
                   Holdings
                 </h2>
-              </div>
-
-              {/* Deferred Sheets sync */}
-              <div className="relative group">
-                <Button variant="ghost" size="sm" disabled>
-                  Sync to Sheets
-                </Button>
-                <div
-                  className="absolute right-0 top-full mt-1 w-52 px-4 py-3 bg-ch font-body text-label-sm text-muted z-10 invisible group-hover:visible blade-left"
-                  style={{ borderLeftWidth: '1px', borderLeftColor: '#919191' }}
-                >
-                  Write sync coming in a future update.
-                </div>
               </div>
             </div>
 
