@@ -39,13 +39,18 @@ export async function fetchFutuHoldings(): Promise<FutuFetchResult> {
 // ─── futu-bridge ───────────────────────────────────────────────────────────
 
 async function fetchFromBridge(cfg: FutuBridgeConfig): Promise<FutuFetchResult> {
-  const url = `${cfg.bridgeUrl.replace(/\/+$/, '')}/positions`
+  const url = `${cfg.bridgeUrl.trim().replace(/\/+$/, '')}/positions`
 
   let res: Response
   try {
-    res = await fetch(url, { headers: { Authorization: `Bearer ${cfg.token}` } })
+    // Tokens are pasted from a terminal, which often adds stray whitespace
+    res = await fetch(url, { headers: { Authorization: `Bearer ${cfg.token.trim()}` } })
   } catch (e) {
-    return { holdings: [], warning: `Futu: cannot reach futu-bridge — ${String(e)}` }
+    // Browsers report a CORS rejection as a bare network error, so point at the likely fix
+    return {
+      holdings: [],
+      warning: `Futu: cannot reach futu-bridge (${String(e)}) — check the Bridge URL, and that ALLOWED_ORIGINS on the VM includes ${window.location.origin}`,
+    }
   }
 
   if (!res.ok) {
