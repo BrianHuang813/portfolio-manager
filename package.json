@@ -10,7 +10,10 @@
     "preview": "vite preview",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest --config vitest.config.ts",
-    "schwab-auth": "node scripts/schwab-auth.mjs"
+    "schwab-auth": "node scripts/schwab-auth.mjs",
+    "leadership": "node scripts/leadership.mjs",
+    "leadership:cached": "node scripts/leadership.mjs --cached",
+    "leadership:test": "node scripts/leadership.mjs --test"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.28.0",

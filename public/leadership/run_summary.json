@@ -1,0 +1,17 @@
+{
+  "run_date": "2026-10-01",
+  "universe_size": 6961,
+  "processed_tickers": 6737,
+  "failed_tickers": 224,
+  "fetch_failed_tickers": 3,
+  "stale_tickers": 221,
+  "annual_rs_valid_count": 5628,
+  "utility_active": true,
+  "utility_window": 34,
+  "utility_rs_valid_count": 6433,
+  "trend_template_pass_count": 517,
+  "utility_screen_pass_count": 150,
+  "emerging_leader_count": 0,
+  "data_quality_warnings": 1385,
+  "calculation_seconds": 15.592
+}

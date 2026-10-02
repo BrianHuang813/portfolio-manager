@@ -1,0 +1,114 @@
+name: Generate Leadership Ratings
+
+on:
+  schedule:
+    - cron: '30 23 * * 1-5'
+  workflow_dispatch:
+  push:
+    paths: ['leadership/**', 'src/**', '.github/workflows/leadership.yml']
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: leadership-daily
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: leadership/requirements.txt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: yarn
+      - name: Install dependencies
+        run: |
+          pip install -r leadership/requirements.txt
+          yarn install --frozen-lockfile
+      - name: Test engine and dashboard
+        run: |
+          python -m pytest leadership/tests -q
+          npm test
+      # Restore the last SUCCESSFUL snapshot, rather than a once-written cache.
+      - name: Restore previous history and metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_id=$(gh run list --workflow leadership.yml --branch "$GITHUB_REF_NAME" --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')
+          if [ -n "$run_id" ]; then
+            gh run download "$run_id" --name leadership-state --dir restored-state
+            mkdir -p leadership/history
+            cp restored-state/history/leadership_history.parquet leadership/history/
+            cp restored-state/data_persist/ticker_info.json leadership/vendor/fred/data_persist/
+          fi
+      - name: Fetch, original Annual RS, and Leadership enrichment
+        run: python leadership/pipeline.py
+      - name: Prepare durable state
+        run: |
+          mkdir -p state/history state/data_persist
+          cp leadership/history/leadership_history.parquet state/history/
+          cp leadership/vendor/fred/data_persist/ticker_info.json state/data_persist/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leadership-state
+          path: state/
+          retention-days: 90
+      - name: Build website with latest results
+        env:
+          DEPLOY_PAGES: ${{ vars.LEADERSHIP_DEPLOY_PAGES }}
+        run: |
+          if [ "$DEPLOY_PAGES" = 'true' ]; then
+            npm run build -- --base "/${GITHUB_REPOSITORY#*/}/"
+            cp dist/index.html dist/404.html
+          else
+            npm run build
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leadership-website
+          path: dist/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: leadership-results
+          path: leadership/output/
+          retention-days: 90
+      - name: Publish daily dataset for the existing deployment
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/leadership/ leadership/vendor/fred/data_persist/ticker_info.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data: update Leadership snapshot $(date -u +%Y-%m-%d)"
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Prepare optional Pages deployment
+        if: vars.LEADERSHIP_DEPLOY_PAGES == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+
+  deploy-pages:
+    if: vars.LEADERSHIP_DEPLOY_PAGES == 'true'
+    needs: generate
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment

@@ -1,0 +1,37 @@
+benchmark:
+  symbol: SPY
+  history_years: 3
+annual_rs:
+  weights: {p3: 0.40, p6: 0.20, p9: 0.20, p12: 0.20}
+utility:
+  activation_days_min: 21
+  activation_days_max: 200
+  weights: {q1: 0.40, q2: 0.20, q3: 0.20, q4: 0.20}
+  rs_threshold: 85
+  min_avg_dollar_volume: 100000000
+  max_distance_from_200d_high: 0.25
+trend_template:
+  rs_min: 70
+  min_above_52w_low: 0.30
+  max_below_52w_high: 0.25
+  ma200_slope_days: 20
+liquidity:
+  min_price: 5
+  min_avg_dollar_volume: 10000000
+classifications:
+  established_rs_min: 90
+  emerging_rs_min: 70
+  emerging_rs_max: 90
+  emerging_change_min: 10
+  emerging_utility_min: 90
+  resilient_utility_min: 90
+  resilient_max_drawdown: 0.10
+  fading_rs_min: 85
+  fading_change_max: -10
+  fading_require_weak_utility: false
+  fading_utility_max: 70
+data_quality:
+  daily_return_min: -0.40
+  daily_return_max: 1.00
+rs_line:
+  high_tolerance: 0.9999

@@ -6,6 +6,7 @@ import { AppShell } from './components/layout/AppShell'
 import { Dashboard } from './pages/Dashboard'
 import { Settings } from './pages/Settings'
 import { PositionManagement } from './pages/PositionManagement'
+import { Leadership } from './pages/Leadership'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,16 +17,16 @@ const queryClient = new QueryClient({
   },
 })
 
-// TODO: replace 'portfolio-manager' with your actual GitHub repo name
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/">
+      <BrowserRouter basename={import.meta.env.BASE_URL}>
         <Routes>
           <Route element={<AppShell />}>
             <Route index element={<Dashboard />} />
             <Route path="settings" element={<Settings />} />
             <Route path="position-management" element={<PositionManagement />} />
+            <Route path="leadership" element={<Leadership />} />
           </Route>
         </Routes>
       </BrowserRouter>

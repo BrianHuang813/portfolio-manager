@@ -2,6 +2,12 @@
 
 Personal investment dashboard — React + Vite SPA deployed to GitHub Pages.
 
+The **Leadership** page adds the Minervini Leadership Engine: original Fred
+IBD-style annual RS, dynamic correction-period Utility RS, RS momentum and
+line, Trend Template and leader classifications. See
+[leadership/README.md](leadership/README.md) for daily pipeline setup,
+data outputs, methodology and validation.
+
 Aggregates holdings from **Charles Schwab**, **OKX**, **Zerion** (self-custody wallets), and **Futu/Moomoo** (US stocks via OpenD + futu-bridge) into a single real-time dashboard with charts, PnL tracking, and news.
 
 ---

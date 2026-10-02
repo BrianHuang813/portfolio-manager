@@ -1,0 +1,3 @@
+-r vendor/fred/requirements.txt
+pyarrow>=15
+pytest>=8

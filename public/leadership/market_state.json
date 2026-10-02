@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-01",
+  "benchmark": "SPY",
+  "close": 763.989990234375,
+  "high_200d": 775.9531860351562,
+  "days_since_200d_high": 34,
+  "drawdown_from_200d_high": -0.01541741952489284,
+  "ma50": 761.5628759765625,
+  "ma200": 716.558473815918,
+  "utility_active": true,
+  "utility_window": 34,
+  "state": "CORRECTION"
+}

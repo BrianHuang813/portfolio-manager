@@ -27,6 +27,7 @@ export function NavBar({ onRefresh, isFetching }: NavBarProps) {
             {[
               { to: '/', label: 'Dashboard' },
               { to: '/position-management', label: 'Positions' },
+              { to: '/leadership', label: 'Leadership' },
               { to: '/settings', label: 'Settings' },
             ].map(({ to, label }) => (
               <NavLink

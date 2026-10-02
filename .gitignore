@@ -25,3 +25,16 @@ Thumbs.db
 coverage/
 dist/
 *.tsbuildinfo
+
+# Leadership runtime and temporary reference checkout
+.tools/
+leadership/.venv/
+leadership/upstream/
+leadership/vendor/fred/data/
+leadership/vendor/fred/tmp/
+leadership/vendor/fred/output/
+leadership/vendor/fred/failed_tickers.txt
+leadership/output/
+leadership/history/
+__pycache__/
+.pytest_cache/
