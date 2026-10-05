@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchLeadership, leadershipBase } from '../services/leadership'
 import type { LeadershipStock } from '../types/leadership'
+import { LeadershipGuide } from '../components/leadership/LeadershipGuide'
 
 const filters = ['All', 'Utility Screen', 'Established', 'Emerging', 'Resilient', 'Fading'] as const
 type Filter = typeof filters[number]
@@ -61,6 +62,6 @@ export function Leadership() {
       <div className="flex items-center gap-4 text-sm text-muted"><button disabled={currentPage === 0} onClick={() => setPage(currentPage - 1)} className="disabled:opacity-30">上一頁</button><span>{currentPage + 1} / {lastPage + 1} · {rows.length} 檔</span><button disabled={currentPage === lastPage} onClick={() => setPage(currentPage + 1)} className="disabled:opacity-30">下一頁</button></div>
     </>}
     {detail && <section className="bg-cl p-5"><div className="flex justify-between"><h2 className="text-primary">{detail.Ticker} · 原始指標與 Trend Template</h2><button className="text-muted" onClick={() => setSelected(null)}>關閉</button></div><dl className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">{Object.entries(detail).map(([key, value]) => <div key={key}><dt className="text-muted text-xs break-all">{key}</dt><dd className="text-on-s text-sm mt-1 break-all">{value == null ? '—' : String(value)}</dd></div>)}</dl></section>}
-    <p className="text-muted text-xs">分類供篩選與研究使用。Annual RS 為 IBD-style 近似排名；各項指標分別保留。</p>
+    <LeadershipGuide />
   </div>
 }
